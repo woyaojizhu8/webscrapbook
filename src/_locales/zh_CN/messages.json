@@ -350,7 +350,7 @@
     "message": "剪贴簿文件夹:"
   },
   "OptionCaptureScrapbookFolderTooltip": {
-    "message": "指定保存剪贴簿数据的顶层文件夹，为 <默认下载文件夹> 以下的路径，例如“WebScrapBook”或“my/webscrapbook”。\n\n* 勾选“将获取数据保存于剪贴簿中”时，获取的文件会保存于 <默认下载文件夹>/<剪贴簿文件夹>/data/ 目录中。\n\n* 如有需要指定 <默认下载文件夹> 以外的文件夹，可在 <默认下载文件夹> 下建立软链接（symblic 或 junction link）指向想要的文件夹，然后把此项设为该链接的路径。"
+    "message": "指定保存剪贴簿数据的顶层文件夹，为 <默认下载文件夹> 以下的路径，例如“WebScrapBook”或“my/webscrapbook”。\n\n* 勾选“将获取数据保存于剪贴簿中”时，获取的文件会保存于 <默认下载文件夹>/<剪贴簿文件夹>/data/ 目录中。\n\n* 如有需要指定 <默认下载文件夹> 以外的文件夹，可在 <默认下载文件夹> 下建立软链接（symblic 或 junction link）指向想要的文件夹，然后把此项设为该链接的路径。\n\n* 若已架设 WebScrapBook 后端服务器，可将此值设置为服务器 WebScrapBook 程序的根目录，比如“http://localhost:8080/”或“https://user:password@example.com/path/to/app”。注意：服务器要求权限验证时，若未填写用户名和密码，会在连线时要求输入，并于关闭浏览器时清除。填写在这里的密码是以明文保存，建议使用加密的 HTTPS 传输协定，使用专门产生的高强度密码，并且避免和你的其他密码相同。"
   },
   "OptionCaptureScriptLabel": {
     "message": "脚本:"

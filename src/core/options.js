@@ -164,8 +164,16 @@ window.addEventListener("DOMContentLoaded", async (event) => {
   // event handlers
   document.getElementById("opt_capture.scrapbookFolder").addEventListener("change", (event) => {
     const elem = event.target;
-    // make sure it's a valid path for browser.downloads.download
-    elem.value = elem.value.split(/[\\\/]/).map(x => scrapbook.validateFilename(x)).join('/');
+
+    try {
+      // a valid URL => take it as the server path
+      const urlObj = new URL(elem.value);
+      urlObj.search = urlObj.hash = '';
+      elem.value = urlObj.href;
+    } catch (ex) {
+      // not a valid URL => make sure it's a valid path for browser.downloads.download
+      elem.value = elem.value.split(/[\\\/]/).map(x => scrapbook.validateFilename(x)).join('/');
+    }
   });
 
   document.getElementById("options").addEventListener("submit", async (event) => {
