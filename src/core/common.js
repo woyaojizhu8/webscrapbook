@@ -91,6 +91,7 @@ let scrapbook = {
 
 scrapbook.options = {
   "capture.scrapbookFolder": "WebScrapBook",
+  "capture.scrapbook": "",
   "capture.saveAs": "zip", // "folder", "zip", "maff", "singleHtml", "singleHtmlJs"
   "capture.saveInScrapbook": false,
   "capture.saveInMemory": false,
@@ -1401,6 +1402,7 @@ scrapbook.httpStatusText = {
  *     - {Array} params.requestHeaders
  *     - {Object} params.formData
  *     - {function} params.onreadystatechange
+ *     - {boolean} params.onload - resolve with xhr object for custom handler
  */
 scrapbook.xhr = async function (params = {}) {
   return new Promise((resolve, reject) => {
@@ -1413,6 +1415,9 @@ scrapbook.xhr = async function (params = {}) {
     }
 
     xhr.onload = function (event) {
+      if (params.onload) {
+        resolve(xhr);
+      }
       if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 0) {
         // we only care about real loading success
         resolve(xhr);
@@ -1452,6 +1457,96 @@ scrapbook.xhr = async function (params = {}) {
 
     xhr.send(params.formData);
   });
+};
+
+
+/**
+ * Check for whether a server backend is set
+ */
+scrapbook.hasServer = function () {
+  const configServerRoot = scrapbook.getOption("capture.scrapbookFolder");
+  return configServerRoot.startsWith('http://') || configServerRoot.startsWith('https://');
+};
+
+
+/**
+ * Get the config of the backend server
+ */
+scrapbook.getServerConfig = async function () {
+  if (!scrapbook.hasServer()) {
+    return null;
+  }
+
+  const that = arguments.callee;
+  let configServerRoot = scrapbook.getOption("capture.scrapbookFolder");
+
+  if (!configServerRoot.endsWith('/')) { configServerRoot += '/'; }
+
+  // use the cached config if the configured server root isn't changed
+  if (that.cachedConfig) {
+    if (configServerRoot.startsWith(that.cachedConfig._ServerRoot)) {
+      return that.cachedConfig;
+    }
+  }
+
+  const xhr = await scrapbook.xhr({
+    url: configServerRoot + '?a=config&f=json',
+    responseType: 'json',
+    method: "GET",
+    onload: true,
+  }).catch((ex) => {
+    throw new Error('Unable to connect to backend server.');
+  });
+
+  if (!xhr.response) {
+    let statusText = xhr.statusText || scrapbook.httpStatusText[xhr.status];
+    statusText = xhr.status + (statusText ? " " + statusText : "");
+    throw new Error(`Unable to load config from backend server: ${statusText}`);
+  }
+
+  if (xhr.response.error) {
+    throw new Error(`Unable to load config from backend server: ${xhr.response.error.message}`);
+  }
+
+  that.cachedConfig = xhr.response.data;
+
+  // revise server root URL
+  // configServerRoot may be too deep, replace with server config
+  {
+    const urlObj = new URL(configServerRoot);
+    urlObj.search = urlObj.search.hash = '';
+    urlObj.pathname = that.cachedConfig.server.base + '/';
+    that.cachedConfig._ServerRoot = urlObj.href;
+  }
+
+  return that.cachedConfig;
+};
+
+
+/**
+ * Acquire an access token from the backend server
+ */
+scrapbook.acquireServerToken = async function (url) {
+  const xhr = await scrapbook.xhr({
+    url: url + '?a=token&f=json',
+    responseType: 'json',
+    method: "GET",
+    onload: true,
+  }).catch((ex) => {
+    throw new Error('Unable to connect to backend server.');
+  });
+
+  if (!xhr.response) {
+    let statusText = xhr.statusText || scrapbook.httpStatusText[xhr.status];
+    statusText = xhr.status + (statusText ? " " + statusText : "");
+    throw new Error(`Unable to acquire access token: ${statusText}`);
+  }
+
+  if (xhr.response.error) {
+    throw new Error(`Unable to acquire access token: ${xhr.response.error.message}`);
+  }
+
+  return xhr.response.data;
 };
 
 

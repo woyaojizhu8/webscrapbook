@@ -495,6 +495,8 @@ capturer.captureBookmark = async function (params) {
       sourceUrl,
       autoErase: false,
       savePrompt,
+      settings,
+      options,
     });
 
     return {timeId, sourceUrl, targetDir, filename, url: scrapbook.escapeFilename(filename) + sourceUrlHash};
@@ -671,6 +673,8 @@ capturer.saveDocument = async function (params) {
             sourceUrl,
             autoErase: false,
             savePrompt,
+            settings,
+            options,
           }).then((filename) => {
             return {timeId, sourceUrl, targetDir, filename, url: scrapbook.escapeFilename(filename) + sourceUrlHash};
           });
@@ -821,6 +825,8 @@ ${JSON.stringify(zipData)}
               sourceUrl,
               autoErase: false,
               savePrompt,
+              settings,
+              options,
             }).then((filename) => {
               return {timeId, sourceUrl, targetDir, filename, url: scrapbook.escapeFilename(filename) + sourceUrlHash};
             });
@@ -880,6 +886,8 @@ ${JSON.stringify(zipData)}
             sourceUrl,
             autoErase: false,
             savePrompt,
+            settings,
+            options,
           }).then((filename) => {
             return {timeId, sourceUrl, targetDir, filename, url: scrapbook.escapeFilename(filename) + sourceUrlHash};
           });
@@ -955,6 +963,8 @@ ${JSON.stringify(zipData)}
               sourceUrl,
               autoErase: false,
               savePrompt,
+              settings,
+              options,
             }).then((filename) => {
               return {timeId, sourceUrl, targetDir, filename, url: scrapbook.escapeFilename(filename) + sourceUrlHash};
             });
@@ -978,6 +988,8 @@ ${JSON.stringify(zipData)}
           sourceUrl,
           autoErase: !settings.frameIsMain || (ext === ".xhtml"),
           savePrompt: false,
+          settings,
+          options,
         });
 
         if (settings.frameIsMain && (ext === ".xhtml")) {
@@ -992,6 +1004,8 @@ ${JSON.stringify(zipData)}
             sourceUrl,
             autoErase: false,
             savePrompt: false,
+            settings,
+            options,
           });
         }
 
@@ -1406,6 +1420,8 @@ capturer.downloadBlob = async function (params) {
         sourceUrl,
         autoErase: true,
         savePrompt: false,
+        settings,
+        options,
       });
       return {
         timeId,
@@ -1517,12 +1533,18 @@ capturer.saveBlobInMemory = async function (params) {
  *     - {string} params.sourceUrl
  *     - {boolean} params.autoErase
  *     - {boolean} params.savePrompt
+ *     - {Object} params.options
  * @return {Promise}
  */
 capturer.saveBlob = async function (params) {
   isDebug && console.debug("call: saveBlob", params);
 
-  const {timeId, blob, directory, filename, sourceUrl, autoErase, savePrompt} = params;
+  const {timeId, blob, directory, filename, sourceUrl, autoErase, savePrompt, options} = params;
+
+  if (directory.startsWith('http://') || directory.startsWith('https://')) {
+    // a server path is configured, save to server
+    return await capturer.saveToServer(params);
+  }
 
   return await capturer.saveUrl({
     timeId,
@@ -1576,6 +1598,53 @@ capturer.saveUrl = async function (params) {
       onError: reject,
     });
   });
+};
+
+/**
+ * @param {Object} params
+ *     - {string} params.timeId
+ *     - {string} params.blob
+ *     - {string} params.directory - URL of the server
+ *     - {string} params.filename
+ *     - {string} params.sourceUrl
+ *     - {Object} params.options
+ * @return {Promise}
+ */
+capturer.saveToServer = async function (params) {
+  isDebug && console.debug("call: saveToServer", params);
+
+  const {timeId, blob, directory, filename, sourceUrl, options} = params;
+  const serverConfig = await scrapbook.getServerConfig();
+  const serverRoot = serverConfig._ServerRoot;
+
+  const target = (() => {
+    const book = options["capture.scrapbook"] || '';
+    const topDir = serverConfig.book[book].top_dir;
+    const dataDir = serverConfig.book[book].data_dir;
+    const subDir = directory.slice((options["capture.scrapbookFolder"] + "/data/").length);
+    return serverRoot +
+        (topDir ? topDir + '/' : '') +
+        (dataDir ? dataDir + '/' : '') +
+        (subDir ? subDir + '/' : '') +
+        filename;
+  })();
+
+  const formData = new FormData();
+  formData.append('token', await scrapbook.acquireServerToken(target));
+  formData.append('upload', blob);
+
+  xhr = await scrapbook.xhr({
+    url: target + '?a=upload&f=json',
+    responseType: 'json',
+    method: "POST",
+    formData: formData,
+  });
+
+  if (xhr.response.error) {
+    throw new Error(`Unable to upload to backend server: ${xhr.response.error.message}`);
+  }
+
+  return filename;
 };
 
 

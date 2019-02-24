@@ -344,7 +344,7 @@
     "message": "Save captured data in ScrapBook"
   },
   "OptionCaptureSaveInScrapbookTooltip": {
-    "message": "When checked, a captured web page will be saved in <default download folder>/<Scrapbook Folder>/data/ directory and be named using an ID made from the datetime for later indexing. When unchecked, the file is named after the web page title and is saved to the <default download folder> or a path specified by the user, and is more suitable for storing and sharing an indivisual web page."
+    "message": "When checked, a captured web page will be saved in the ScrapBook folder (<default download folder>/<ScrapBook Folder>/data/ or the configured data directory of the backend server) and be named using an ID made from the datetime for later indexing. When unchecked, the file is named after the web page title and is saved to the <default download folder> or a path specified by the user, and is more suitable for storing and sharing an indivisual web page."
   },
   "OptionCaptureScrapbookFolderLabel": {
     "message": "ScrapBook Folder:"
