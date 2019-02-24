@@ -1674,7 +1674,7 @@ const indexer = {
     }
 
     // auto download
-    if (this.options["indexer.autoDownload"]) {
+    if (this.options["indexer.autoDownload"] && !scrapbook.hasServer()) {
       const directory = scrapbook.getOption("capture.scrapbookFolder");
 
       if (scrapbook.validateFilename(scrapbookData.title) === directory.replace(/^.*[\\\/]/, "")) {
