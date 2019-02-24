@@ -120,6 +120,9 @@
   "OpenOptions": {
     "message": "选项"
   },
+  "OpenScrapBook": {
+    "message": "打开剪贴簿"
+  },
   "OpenViewer": {
     "message": "检视封存网页"
   },
@@ -447,6 +450,9 @@
   },
   "OptionViewerViewMaffTooltip": {
     "message": "浏览器载入 MAFF 文件时，自动以检视器检视。在支援的浏览器勾选“允许訪問文件网址”即可用浏览器直接开启此类文件。"
+  },
+  "ScrapBookLoaderTitle": {
+    "message": "载入剪贴簿"
   },
   "ViewerDesc": {
     "message": "选择 HTZ 或 MAFF 封存文件以开启之。你可以拖放它们至此窗口，或使用以下按钮："

@@ -139,6 +139,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     return await capturer.invokeCapture({target});
   });
 
+  document.getElementById("openScrapBook").addEventListener('click', async (event) => {
+    if (!scrapbook.isOptionsSynced) {
+      await scrapbook.loadOptions();
+    }
+
+    if (scrapbook.hasServer()) {
+      const book = scrapbook.getOption("capture.scrapbook") || '';
+      await visitLink(browser.runtime.getURL("core/scrapbookLoader.html") + `?name=${book}`, !!targetTab);
+    } else {
+      browser.downloads.showDefaultFolder();
+    }
+  });
+
   document.getElementById("openViewer").addEventListener('click', async (event) => {
     await visitLink(browser.runtime.getURL("viewer/load.html"), !!targetTab);
   });
