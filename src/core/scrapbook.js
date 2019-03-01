@@ -28,26 +28,26 @@ const scrapbookUi = {
   },
 
   log(msg) {
-    scrapbookUi.logger.appendChild(document.createTextNode(msg + '\n'));
+    document.getElementById("logger").appendChild(document.createTextNode(msg + '\n'));
   },
 
   warn(msg) {
     const span = document.createElement('span');
     span.className = 'warn';
     span.appendChild(document.createTextNode(msg + '\n'));
-    scrapbookUi.logger.appendChild(span);
+    document.getElementById("logger").appendChild(span);
   },
 
   error(msg) {
     const span = document.createElement('span');
     span.className = 'error';
     span.appendChild(document.createTextNode(msg + '\n'));
-    scrapbookUi.logger.appendChild(span);
+    document.getElementById("logger").appendChild(span);
   },
   
   async init() {
     // UI reset
-    this.logger.innerHTML = "";
+    document.getElementById("logger").innerHTML = "";
     document.getElementById('item-root').innerHTML = "";
 
     // load config
@@ -176,6 +176,10 @@ const scrapbookUi = {
     }
   },
 
+  async menu() {
+    const itemElem = this.lastHighlightElem;
+  },
+
   addItem(id, parent) {
     const meta = this.data.meta[id];
 
@@ -286,7 +290,7 @@ const scrapbookUi = {
 
   highlightItem(itemElem, willHighlight) {
     if (typeof willHighlight === "undefined") {
-      willHighlight = !itemElem.classList.contains("highlight");
+      willHighlight = !this.getHighlightElem(itemElem).classList.contains("highlight");
     }
 
     if (willHighlight) {
@@ -326,11 +330,12 @@ const scrapbookUi = {
 document.addEventListener('DOMContentLoaded', async () => {
   scrapbook.loadLanguages(document);
 
-  scrapbookUi.logger = document.getElementById("logger");
-  scrapbookUi.btnRefresh = document.getElementById("btn-refresh");
-
-  scrapbookUi.btnRefresh.addEventListener('click', async () => {
+  document.getElementById("btn-refresh").addEventListener('click', async () => {
     await scrapbookUi.init();
+  });
+
+  document.getElementById("btn-menu").addEventListener('click', async () => {
+    await scrapbookUi.menu();
   });
 
   await scrapbookUi.init();  
