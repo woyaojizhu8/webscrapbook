@@ -163,12 +163,12 @@ const scrapbookUi = {
       rootElem.appendChild(rootElem.container);
 
       for (const id of this.data.toc.root) {
-        this.addItem(id, rootElem, ["root"]);
+        this.addItem(id, rootElem);
       }
     }
   },
 
-  addItem(id, parent, idChain) {
+  addItem(id, parent) {
     const meta = this.data.meta[id];
 
     var elem = document.createElement('li');
@@ -229,15 +229,6 @@ const scrapbookUi = {
         elem.container.className = 'scrapbook-container';
         elem.container.style.display = 'none';
         elem.appendChild(elem.container);
-
-        var childIdChain = idChain.slice();
-        childIdChain.push(id);
-        for (var i = 0, I = childIdList.length; i < I; i++) {
-          var childId = childIdList[i];
-          if (idChain.indexOf(childId) === -1) {
-            this.addItem(childId, elem, childIdChain);
-          }
-        }
       }
     } else {
       var line = document.createElement('fieldset');
@@ -256,6 +247,16 @@ const scrapbookUi = {
     if (typeof willOpen === "undefined") {
       willOpen = (elem.style.display === "none");
     }
+
+    // load child nodes if not loaded yet
+    if (willOpen && !elem.hasChildNodes())  {
+      const itemElem = elem.parentNode;
+
+      for (const id of this.data.toc[itemElem.id.slice(5)]) {
+        this.addItem(id, itemElem);
+      }
+    }
+
     elem.style.display = willOpen ? '' : 'none';
 
     try {
