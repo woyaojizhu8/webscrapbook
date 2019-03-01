@@ -276,6 +276,14 @@ const scrapbookUi = {
     }
   },
 
+  getHighlightElem(itemElem) {
+    let elem = itemElem.firstChild.firstChild;
+    if (itemElem.classList.contains("scrapbook-type-folder")) {
+      elem = elem.nextSibling;
+    }
+    return elem;
+  },
+
   highlightItem(itemElem, willHighlight) {
     if (typeof willHighlight === "undefined") {
       willHighlight = !itemElem.classList.contains("highlight");
@@ -283,12 +291,12 @@ const scrapbookUi = {
 
     if (willHighlight) {
       if (this.lastHighlightElem) {
-        this.lastHighlightElem.classList.remove("highlight");
+        this.getHighlightElem(this.lastHighlightElem).classList.remove("highlight");
       }
-      itemElem.classList.add("highlight");
+      this.getHighlightElem(itemElem).classList.add("highlight");
       this.lastHighlightElem = itemElem;
     } else {
-      itemElem.classList.remove("highlight");
+      this.getHighlightElem(itemElem).classList.remove("highlight");
       if (this.lastHighlightElem === itemElem) {
         this.lastHighlightElem = null;
       }
