@@ -1,12 +1,19 @@
+html,
 body {
   margin: 0;
   padding: 0;
+  height: 100%;
+}
+
+#wrapper {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
 }
 
 #toolbar {
-  margin-bottom: 1em;
+  flex: 0 1 auto;
   border-bottom: 2px ridge #CCCCCC;
-  padding-bottom: .25em;
 }
 
 #toolbar button {
@@ -14,22 +21,26 @@ body {
 }
 
 #logger {
+  flex: 0 1 auto;
+  max-height: 200px;
+  overflow: auto;
   white-space: pre-wrap;
 }
 
-.warn {
+#logger .warn {
   color: #f0ad4e;
   font-weight: bold;
 }
 
-.error {
+#logger .error {
   color: #d9534f;
   font-weight: bold;
 }
 
-
 /* tree */
 #item-root {
+  flex: 1 1 auto;
+  overflow: auto;
   padding: 0 1.65em;
   font-size: 12px;
   line-height: 1.35em;
