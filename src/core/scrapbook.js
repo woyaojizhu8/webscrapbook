@@ -204,10 +204,10 @@ const scrapbookUi = {
             (this._dataUrl + scrapbook.escapeFilename(meta.index || "")).replace(/[/][^/]+$/, '/') + meta.icon;
       } else {
         icon.src = {
-          'folder': this._treeUrl + 'icon/fclose.png',
-          'note': this._treeUrl + 'icon/note.png',
-          'postit': this._treeUrl + 'icon/postit.png',
-        }[meta.type] || (this._treeUrl + 'icon/item.png');
+          'folder': browser.runtime.getURL('resources/fclose.png'),
+          'note': browser.runtime.getURL('resources/note.png'),
+          'postit': browser.runtime.getURL('resources/postit.png'),
+        }[meta.type] || browser.runtime.getURL('resources/item.png');
       }
       icon.alt = "";
       a.insertBefore(icon, a.firstChild);
@@ -221,7 +221,7 @@ const scrapbookUi = {
         srcLink.target = "_blank";
 
         var srcImg = document.createElement('img');
-        srcImg.src = this._treeUrl + 'icon/external.png';
+        srcImg.src = browser.runtime.getURL('resources/external.png');
         srcImg.alt = '';
         srcLink.appendChild(srcImg);
       }
@@ -235,7 +235,7 @@ const scrapbookUi = {
         div.insertBefore(elem.toggle, div.firstChild);
 
         var toggleImg = document.createElement('img');
-        toggleImg.src = this._treeUrl + 'icon/collapse.png';
+        toggleImg.src = browser.runtime.getURL('resources/collapse.png');
         toggleImg.alt = '';
         elem.toggle.appendChild(toggleImg);
 
