@@ -25,7 +25,6 @@ const scrapbookUi = {
     }
   },
 
-
   log(msg) {
     scrapbookUi.logger.appendChild(document.createTextNode(msg + '\n'));
   },
@@ -155,8 +154,116 @@ const scrapbookUi = {
       this.error(`Unable to load index: ${ex.message}`);
     }
 
-    
-    
+    // init tree
+    {
+      const rootElem = document.getElementById('item-root');
+
+      rootElem.container = document.createElement('ul');
+      rootElem.container.className = 'scrapbook-container';
+      rootElem.appendChild(rootElem.container);
+
+      for (const id of this.data.toc.root) {
+        this.addItem(id, rootElem, ["root"]);
+      }
+    }
+  },
+
+  addItem(id, parent, idChain) {
+    const meta = this.data.meta[id];
+
+    var elem = document.createElement('li');
+    elem.id = 'item-' + id;
+    if (meta.type) { elem.className = 'scrapbook-type-' + meta.type + ' '; };
+    if (meta.marked) { elem.className += 'scrapbook-marked '; }
+    parent.container.appendChild(elem);
+
+    var div = document.createElement('div');
+    div.onclick = this.onClickItem;
+    elem.appendChild(div);
+
+    if (meta.type !== 'separator') {
+      var a = document.createElement('a');
+      a.appendChild(document.createTextNode(meta.title || id));
+      if (meta.type !== 'bookmark') {
+        if (meta.index) { a.href = this._dataUrl + scrapbook.escapeFilename(meta.index); }
+      } else {
+        if (meta.source) {
+          a.href = meta.source;
+        } else {
+          if (meta.index) { a.href = this._dataUrl + scrapbook.escapeFilename(meta.index); }
+        }
+      }
+      if (meta.comment) { a.title = meta.comment; }
+      if (meta.type === 'folder') { a.onclick = this.onClickFolder; }
+      div.appendChild(a);
+
+      var icon = document.createElement('img');
+      if (meta.icon) {
+        icon.src = /^(?:[a-z][a-z0-9+.-]*:|[/])/i.test(meta.icon || "") ? 
+            meta.icon : 
+            (this._dataUrl + scrapbook.escapeFilename(meta.index || "")).replace(/[/][^/]+$/, '/') + meta.icon;
+      } else {
+        icon.src = {
+          'folder': this._treeUrl + 'icon/fclose.png',
+          'note': this._treeUrl + 'icon/note.png',
+          'postit': this._treeUrl + 'icon/postit.png',
+        }[meta.type] || (this._treeUrl + 'icon/item.png');
+      }
+      icon.alt = "";
+      a.insertBefore(icon, a.firstChild);
+
+      if (meta.type !== 'bookmark' && meta.source) {
+        var srcLink = document.createElement('a');
+        srcLink.className = 'scrapbook-external';
+        srcLink.href = meta.source;
+        srcLink.title = "${scrapbook.escapeQuotes(scrapbook.lang('IndexerSourceLinkTitle'))}";
+        div.appendChild(srcLink);
+        srcLink.target = "_blank";
+
+        var srcImg = document.createElement('img');
+        srcImg.src = this._treeUrl + 'icon/external.png';
+        srcImg.alt = '';
+        srcLink.appendChild(srcImg);
+      }
+
+      var childIdList = this.data.toc[id];
+      if (childIdList && childIdList.length) {
+        elem.toggle = document.createElement('a');
+        elem.toggle.href = '#';
+        elem.toggle.className = 'scrapbook-toggle';
+        elem.toggle.onclick = this.onClickToggle;
+        div.insertBefore(elem.toggle, div.firstChild);
+
+        var toggleImg = document.createElement('img');
+        toggleImg.src = this._treeUrl + 'icon/collapse.png';
+        toggleImg.alt = '';
+        elem.toggle.appendChild(toggleImg);
+
+        elem.container = document.createElement('ul');
+        elem.container.className = 'scrapbook-container';
+        elem.container.style.display = 'none';
+        elem.appendChild(elem.container);
+
+        var childIdChain = idChain.slice();
+        childIdChain.push(id);
+        for (var i = 0, I = childIdList.length; i < I; i++) {
+          var childId = childIdList[i];
+          if (idChain.indexOf(childId) === -1) {
+            this.addItem(childId, elem, childIdChain);
+          }
+        }
+      }
+    } else {
+      var line = document.createElement('fieldset');
+      if (meta.comment) { line.title = meta.comment; }
+      div.appendChild(line);
+
+      var legend = document.createElement('legend');
+      legend.appendChild(document.createTextNode('\xA0' + (meta.title || '') + '\xA0'));
+      line.appendChild(legend);
+    }
+
+    return elem;
   },
 };
 

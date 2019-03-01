@@ -26,3 +26,90 @@ body {
   color: #d9534f;
   font-weight: bold;
 }
+
+
+/* tree */
+#item-root {
+  padding: 0 1.65em;
+  font-size: 12px;
+  line-height: 1.35em;
+  font-family: sans-serif;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  list-style-type: none;
+  margin: .2em 0;
+  padding-__MSG_@@bidi_start_edge__: .85em;
+}
+
+li > div {
+  margin-__MSG_@@bidi_start_edge__: -.85em;
+  white-space: nowrap;
+}
+
+a {
+  text-decoration: none;
+  color: #000000;
+}
+
+a:focus {
+  background-color: #6495ED;
+  text-decoration: underline;
+}
+
+a:active {
+  background-color: #FFB699;
+}
+
+a > img {
+  display: inline-block;
+  margin-left: .1em;
+  margin-right: .1em;
+  border: none;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: middle;
+}
+
+a.scrapbook-toggle {
+  margin-__MSG_@@bidi_start_edge__: -1.45em;
+}
+
+a.scrapbook-external > img {
+  width: 1em;
+  height: 1em;
+  vertical-align: top;
+}
+
+.scrapbook-type-bookmark > div > a {
+  color: rgb(32,192,32);
+}
+
+.scrapbook-type-note > div > a {
+  color: rgb(80,0,32);
+}
+
+.scrapbook-type-site > div > a {
+  color: blue;
+}
+
+.scrapbook-type-separator > div > fieldset {
+  margin: 0;
+  border: none;
+  border-top: 1px solid #aaa;
+  padding: 0 0 0 1em;
+  text-indent: 0;
+}
+
+.scrapbook-type-separator > div > fieldset > legend {
+  padding: 0;
+}
+
+.scrapbook-marked > div > a {
+  font-weight: bold;
+}
