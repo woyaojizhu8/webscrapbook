@@ -194,7 +194,7 @@ const scrapbookUi = {
         }
       }
       if (meta.comment) { a.title = meta.comment; }
-      if (meta.type === 'folder') { a.onclick = this.onClickFolder; }
+      if (meta.type === 'folder') { a.onclick = this.onClickFolder.bind(this); }
       div.appendChild(a);
 
       var icon = document.createElement('img');
@@ -217,7 +217,7 @@ const scrapbookUi = {
         elem.toggle = document.createElement('a');
         elem.toggle.href = '#';
         elem.toggle.className = 'scrapbook-toggle';
-        elem.toggle.onclick = this.onClickToggle;
+        elem.toggle.onclick = this.onClickToggle.bind(this);
         div.insertBefore(elem.toggle, div.firstChild);
 
         var toggleImg = document.createElement('img');
@@ -250,6 +250,33 @@ const scrapbookUi = {
     }
 
     return elem;
+  },
+
+  toggleElem(elem, willOpen) {
+    if (typeof willOpen === "undefined") {
+      willOpen = (elem.style.display === "none");
+    }
+    elem.style.display = willOpen ? '' : 'none';
+
+    try {
+      elem.previousSibling.firstChild.firstChild.src = willOpen ?
+      browser.runtime.getURL('resources/expand.png') :
+      browser.runtime.getURL('resources/collapse.png');
+    } catch (ex) {
+      // if the elem is the root elem, previousSibling is undefined and an error is thrown
+    }
+  },
+
+  onClickFolder(event) {
+    event.preventDefault();
+    const target = event.currentTarget.previousSibling;
+    target.focus();
+    target.click();
+  },
+
+  onClickToggle(event) {
+    event.preventDefault();
+    this.toggleElem(event.currentTarget.parentNode.nextSibling);
   },
 };
 
