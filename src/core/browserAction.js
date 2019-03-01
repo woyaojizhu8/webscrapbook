@@ -140,15 +140,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById("openScrapBook").addEventListener('click', async (event) => {
-    if (!scrapbook.isOptionsSynced) {
-      await scrapbook.loadOptions();
-    }
+    const url = browser.runtime.getURL("core/scrapbook.html");
 
-    if (scrapbook.hasServer()) {
-      const book = scrapbook.getOption("capture.scrapbook") || '';
-      await visitLink(browser.runtime.getURL("core/scrapbookLoader.html") + `?name=${book}`, !!targetTab);
+    if (browser.sidebarAction) {
+      await browser.sidebarAction.open();
+    } else if (browser.windows) {
+      const sideWindows = (await browser.windows.getAll({
+        windowTypes: ['popup'],
+        populate: true,
+      })).filter(w => w.tabs[0].url.startsWith(url));
+      const left = 0;
+      const top = 0;
+      const width = Math.max(Math.floor(window.screen.availWidth / 5 - 1), 200);
+      const height = window.screen.availHeight - 1;
+
+      if (sideWindows.length) {
+        await browser.windows.update(sideWindows[0].id, {
+          left,
+          top,
+          width,
+          height,
+          focused: true,
+          drawAttention: true,
+        });
+      } else {
+        await browser.windows.create({
+          url,
+          left,
+          top,
+          width,
+          height,
+          focused: true,
+          type: 'popup',
+        });
+      }
     } else {
-      browser.downloads.showDefaultFolder();
+      // Firefox Android does not support windows
+      await visitLink(url, !!targetTab);
     }
   });
 
@@ -163,4 +191,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById("openOptions").addEventListener('click', async (event) => {
     await visitLink(browser.runtime.getURL("core/options.html"), !!targetTab);
   });
+
+  /**
+   * Asynchronous tasks
+   */
+  if (!scrapbook.isOptionsSynced) {
+    await scrapbook.loadOptions();
+  }
+
+  // allow this only when server is configured
+  if (scrapbook.hasServer()) {
+    document.getElementById("openScrapBook").disabled = false;
+  }
 });

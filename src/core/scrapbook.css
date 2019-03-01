@@ -1,0 +1,28 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#toolbar {
+  margin-bottom: 1em;
+  border-bottom: 2px ridge #CCCCCC;
+  padding-bottom: .25em;
+}
+
+#toolbar button {
+  margin: 3px;
+}
+
+#logger {
+  white-space: pre-wrap;
+}
+
+.warn {
+  color: #f0ad4e;
+  font-weight: bold;
+}
+
+.error {
+  color: #d9534f;
+  font-weight: bold;
+}
