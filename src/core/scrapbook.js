@@ -84,6 +84,7 @@ const scrapbookUi = {
       this._indexUrl = this._topUrl + book.index;
     } catch (ex) {
       this.error(`Unable to load scrapbook: ${ex.message}`);
+      return;
     }
 
     // load index
@@ -153,10 +154,11 @@ const scrapbookUi = {
       }
     } catch (ex) {
       this.error(`Unable to load index: ${ex.message}`);
+      return;
     }
 
     // init tree
-    {
+    try {
       const rootElem = document.getElementById('item-root');
 
       rootElem.container = document.createElement('ul');
@@ -166,6 +168,9 @@ const scrapbookUi = {
       for (const id of this.data.toc.root) {
         this.addItem(id, rootElem);
       }
+    } catch (ex) {
+      this.error(`Unable to load tree: ${ex.message}`);
+      return;
     }
   },
 
