@@ -46,6 +46,7 @@ const scrapbookUi = {
   async init() {
     // UI reset
     this.logger.innerHTML = "";
+    document.getElementById('item-root').innerHTML = "";
 
     // load config
     await scrapbook.loadOptions();
