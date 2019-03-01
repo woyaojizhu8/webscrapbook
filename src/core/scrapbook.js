@@ -6,6 +6,8 @@
  *******************************************************************/
 
 const scrapbookUi = {
+  lastHighlightElem: null,
+
   data: {
     title: document.title,
     book: null,
@@ -184,7 +186,7 @@ const scrapbookUi = {
     parent.container.appendChild(elem);
 
     var div = document.createElement('div');
-    div.onclick = this.onClickItem;
+    div.onclick = this.onClickItem.bind(this);
     elem.appendChild(div);
 
     if (meta.type !== 'separator') {
@@ -274,6 +276,30 @@ const scrapbookUi = {
     }
   },
 
+  highlightItem(itemElem, willHighlight) {
+    if (typeof willHighlight === "undefined") {
+      willHighlight = !itemElem.classList.contains("highlight");
+    }
+
+    if (willHighlight) {
+      if (this.lastHighlightElem) {
+        this.lastHighlightElem.classList.remove("highlight");
+      }
+      itemElem.classList.add("highlight");
+      this.lastHighlightElem = itemElem;
+    } else {
+      itemElem.classList.remove("highlight");
+      if (this.lastHighlightElem === itemElem) {
+        this.lastHighlightElem = null;
+      }
+    }
+  },
+
+  onClickItem(event) {
+    const itemElem = event.currentTarget.parentNode;
+    this.highlightItem(itemElem);
+  },
+
   onClickFolder(event) {
     event.preventDefault();
     const target = event.currentTarget.previousSibling;
@@ -283,6 +309,8 @@ const scrapbookUi = {
 
   onClickToggle(event) {
     event.preventDefault();
+    const itemElem = event.currentTarget.parentNode.parentNode;
+    this.highlightItem(itemElem);
     this.toggleElem(event.currentTarget.parentNode.nextSibling);
   },
 };
