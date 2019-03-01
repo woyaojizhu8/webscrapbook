@@ -212,20 +212,6 @@ const scrapbookUi = {
       icon.alt = "";
       a.insertBefore(icon, a.firstChild);
 
-      if (meta.type !== 'bookmark' && meta.source) {
-        var srcLink = document.createElement('a');
-        srcLink.className = 'scrapbook-external';
-        srcLink.href = meta.source;
-        srcLink.title = "${scrapbook.escapeQuotes(scrapbook.lang('IndexerSourceLinkTitle'))}";
-        div.appendChild(srcLink);
-        srcLink.target = "_blank";
-
-        var srcImg = document.createElement('img');
-        srcImg.src = browser.runtime.getURL('resources/external.png');
-        srcImg.alt = '';
-        srcLink.appendChild(srcImg);
-      }
-
       var childIdList = this.data.toc[id];
       if (childIdList && childIdList.length) {
         elem.toggle = document.createElement('a');
