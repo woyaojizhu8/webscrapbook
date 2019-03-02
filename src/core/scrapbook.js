@@ -333,6 +333,40 @@ const scrapbookUi = {
     this.highlightItem(itemElem);
     this.toggleElem(event.currentTarget.parentNode.nextSibling);
   },
+
+  async openLink(url, newTab) {
+    if (browser.windows) {
+      let win;
+      try {
+        win = await browser.windows.getLastFocused({
+          populate: true,
+          windowTypes: ['normal'],
+        });
+        if (!win) {
+          throw new Error('no last-focused window');
+        }
+      } catch (ex) {
+        // no last-focused window
+        await browser.windows.create({
+          url,
+        });
+        return;
+      }
+
+      const targetTab = win.tabs.filter(x => x.active)[0];
+      if (!targetTab) {
+        await browser.tabs.create({
+          windowId: win.id,
+          url,
+        });
+        return;
+      }
+
+      await browser.tabs.update(targetTab.id, {
+        url,
+      });
+    }
+  },
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -345,6 +379,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById("book").addEventListener('change', async (event) => {
     location.href = '?id=' + encodeURIComponent(event.target.value);
   });
+
+  document.getElementById('item-root').addEventListener('click', async (event) => {
+    const selector = 'a[href]:not(.toggle)';
+    let elem = event.target;
+    if (!elem.matches(selector)) {
+      elem = elem.closest(selector);
+    }
+    if (!elem) {
+      return;
+    }
+
+    // for desktop browsers, open link in the same tab
+    if (browser.windows) {
+      event.preventDefault();
+      await scrapbookUi.openLink(elem.href);
+    }
+  }, true);
 
   await scrapbookUi.init();  
 });
