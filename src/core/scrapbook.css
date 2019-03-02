@@ -41,7 +41,8 @@ body {
 #item-root {
   flex: 1 1 auto;
   overflow: auto;
-  padding: 0 1.65em;
+  padding: 0;
+  padding-__MSG_@@bidi_start_edge__: 1.65em;
   font-size: 12px;
   line-height: 1.35em;
   font-family: sans-serif;
