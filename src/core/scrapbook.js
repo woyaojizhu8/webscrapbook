@@ -239,7 +239,7 @@ const scrapbookUi = {
 
         elem.container = document.createElement('ul');
         elem.container.className = 'container';
-        elem.container.style.display = 'none';
+        elem.container.hidden = true;
         elem.appendChild(elem.container);
       }
     } else {
@@ -257,7 +257,7 @@ const scrapbookUi = {
 
   toggleElem(elem, willOpen) {
     if (typeof willOpen === "undefined") {
-      willOpen = (elem.style.display === "none");
+      willOpen = !!elem.hidden;
     }
 
     // load child nodes if not loaded yet
@@ -269,7 +269,7 @@ const scrapbookUi = {
       }
     }
 
-    elem.style.display = willOpen ? '' : 'none';
+    elem.hidden = !willOpen;
 
     try {
       elem.previousSibling.firstChild.firstChild.src = willOpen ?
