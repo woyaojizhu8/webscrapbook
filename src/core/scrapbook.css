@@ -79,23 +79,23 @@ body {
   vertical-align: middle;
 }
 
-#item-root a.scrapbook-toggle {
+#item-root a.toggle {
   margin-__MSG_@@bidi_start_edge__: -1.45em;
 }
 
-#item-root .scrapbook-type-bookmark > div > a {
+#item-root [data-type="bookmark"] > div > a {
   color: rgb(32,192,32);
 }
 
-#item-root .scrapbook-type-note > div > a {
+#item-root [data-type="note"] > div > a {
   color: rgb(80,0,32);
 }
 
-#item-root .scrapbook-type-site > div > a {
+#item-root [data-type="site"] > div > a {
   color: blue;
 }
 
-#item-root .scrapbook-type-separator > div > fieldset {
+#item-root [data-type="separator"] > div > fieldset {
   margin: 0;
   border: none;
   border-top: 1px solid #aaa;
@@ -103,11 +103,11 @@ body {
   text-indent: 0;
 }
 
-#item-root .scrapbook-type-separator > div > fieldset > legend {
+#item-root [data-type="separator"] > div > fieldset > legend {
   padding: 0;
 }
 
-#item-root .scrapbook-marked > div > a {
+#item-root [data-marked] > div > a {
   font-weight: bold;
 }
 

@@ -164,7 +164,7 @@ const scrapbookUi = {
       const rootElem = document.getElementById('item-root');
 
       rootElem.container = document.createElement('ul');
-      rootElem.container.className = 'scrapbook-container';
+      rootElem.container.className = 'container';
       rootElem.appendChild(rootElem.container);
 
       for (const id of this.data.toc.root) {
@@ -185,8 +185,8 @@ const scrapbookUi = {
 
     var elem = document.createElement('li');
     elem.id = 'item-' + id;
-    if (meta.type) { elem.className = 'scrapbook-type-' + meta.type + ' '; };
-    if (meta.marked) { elem.className += 'scrapbook-marked '; }
+    if (meta.type) { elem.setAttribute('data-type', meta.type); };
+    if (meta.marked) { elem.setAttribute('data-marked', ''); }
     parent.container.appendChild(elem);
 
     var div = document.createElement('div');
@@ -228,7 +228,7 @@ const scrapbookUi = {
       if (childIdList && childIdList.length) {
         elem.toggle = document.createElement('a');
         elem.toggle.href = '#';
-        elem.toggle.className = 'scrapbook-toggle';
+        elem.toggle.className = 'toggle';
         elem.toggle.onclick = this.onClickToggle.bind(this);
         div.insertBefore(elem.toggle, div.firstChild);
 
@@ -238,7 +238,7 @@ const scrapbookUi = {
         elem.toggle.appendChild(toggleImg);
 
         elem.container = document.createElement('ul');
-        elem.container.className = 'scrapbook-container';
+        elem.container.className = 'container';
         elem.container.style.display = 'none';
         elem.appendChild(elem.container);
       }
@@ -282,7 +282,7 @@ const scrapbookUi = {
 
   getHighlightElem(itemElem) {
     let elem = itemElem.firstChild.firstChild;
-    if (itemElem.classList.contains("scrapbook-type-folder")) {
+    if (itemElem.getAttribute('data-type') === "folder") {
       elem = elem.nextSibling;
     }
     return elem;
