@@ -47,28 +47,28 @@ body {
   font-family: sans-serif;
 }
 
-ul {
+#item-root ul {
   margin: 0;
   padding: 0;
 }
 
-li {
+#item-root li {
   list-style-type: none;
   margin: .2em 0;
   padding-__MSG_@@bidi_start_edge__: .85em;
 }
 
-li > div {
+#item-root li > div {
   margin-__MSG_@@bidi_start_edge__: -.85em;
   white-space: nowrap;
 }
 
-a {
+#item-root a {
   text-decoration: none;
   color: #000000;
 }
 
-a > img {
+#item-root a > img {
   display: inline-block;
   margin-left: .1em;
   margin-right: .1em;
@@ -78,29 +78,23 @@ a > img {
   vertical-align: middle;
 }
 
-a.scrapbook-toggle {
+#item-root a.scrapbook-toggle {
   margin-__MSG_@@bidi_start_edge__: -1.45em;
 }
 
-a.scrapbook-external > img {
-  width: 1em;
-  height: 1em;
-  vertical-align: top;
-}
-
-.scrapbook-type-bookmark > div > a {
+#item-root .scrapbook-type-bookmark > div > a {
   color: rgb(32,192,32);
 }
 
-.scrapbook-type-note > div > a {
+#item-root .scrapbook-type-note > div > a {
   color: rgb(80,0,32);
 }
 
-.scrapbook-type-site > div > a {
+#item-root .scrapbook-type-site > div > a {
   color: blue;
 }
 
-.scrapbook-type-separator > div > fieldset {
+#item-root .scrapbook-type-separator > div > fieldset {
   margin: 0;
   border: none;
   border-top: 1px solid #aaa;
@@ -108,14 +102,14 @@ a.scrapbook-external > img {
   text-indent: 0;
 }
 
-.scrapbook-type-separator > div > fieldset > legend {
+#item-root .scrapbook-type-separator > div > fieldset > legend {
   padding: 0;
 }
 
-.scrapbook-marked > div > a {
+#item-root .scrapbook-marked > div > a {
   font-weight: bold;
 }
 
-.highlight {
+#item-root .highlight {
   background-color: #EBF4FD;
 }
