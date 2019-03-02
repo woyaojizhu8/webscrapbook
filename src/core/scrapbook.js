@@ -9,7 +9,6 @@ const scrapbookUi = {
   lastHighlightElem: null,
 
   data: {
-    title: document.title,
     book: null,
     toc: {},
     meta: {},
@@ -67,11 +66,11 @@ const scrapbookUi = {
         return;
       }
 
-      this.data.title = new URL(location.href).searchParams.get('name') || '';
-      const book = this.data.book = serverConfig.book[this.data.title];
+      const bookId = new URL(location.href).searchParams.get('id') || '';
+      const book = this.data.book = serverConfig.book[bookId];
 
       if (!book) {
-        throw new Error(`unknown scrapbook: ${this.data.title}`);
+        throw new Error(`unknown scrapbook: ${bookId}`);
       }
 
       this._topUrl = serverConfig._ServerRoot +
@@ -84,6 +83,19 @@ const scrapbookUi = {
           (book.tree_dir ? book.tree_dir + '/' : '');
 
       this._indexUrl = this._topUrl + book.index;
+
+      // init book select
+      {
+        const wrapper = document.getElementById('book');
+        for (const [name, book] of Object.entries(serverConfig.book)) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = book.name;
+          wrapper.appendChild(opt);
+        }
+        wrapper.value = bookId;
+        wrapper.hidden = false;
+      }
     } catch (ex) {
       this.error(`Unable to load scrapbook: ${ex.message}`);
       return;
@@ -178,6 +190,10 @@ const scrapbookUi = {
 
   async menu() {
     const itemElem = this.lastHighlightElem;
+  },
+
+  async switchBook(id) {
+    location.href = '?id=' + encodeURIComponent(id);
   },
 
   addItem(id, parent) {
@@ -336,6 +352,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById("btn-menu").addEventListener('click', async () => {
     await scrapbookUi.menu();
+  });
+
+  document.getElementById("book").addEventListener('change', async (event) => {
+    await scrapbookUi.switchBook(event.target.value);
   });
 
   await scrapbookUi.init();  
