@@ -188,10 +188,6 @@ const scrapbookUi = {
     }
   },
 
-  async menu() {
-    const itemElem = this.lastHighlightElem;
-  },
-
   async switchBook(id) {
     location.href = '?id=' + encodeURIComponent(id);
   },
@@ -348,10 +344,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById("btn-refresh").addEventListener('click', async () => {
     await scrapbookUi.init();
-  });
-
-  document.getElementById("btn-menu").addEventListener('click', async () => {
-    await scrapbookUi.menu();
   });
 
   document.getElementById("book").addEventListener('change', async (event) => {
