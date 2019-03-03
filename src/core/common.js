@@ -1468,6 +1468,21 @@ scrapbook.hasServer = function () {
   return configServerRoot.startsWith('http://') || configServerRoot.startsWith('https://');
 };
 
+/**
+ * Wrapped API for request to backend server
+ */
+scrapbook.serverRequest = async function (params = {}) {
+  params.onload = true;
+  const xhr = await scrapbook.xhr(params);
+  if (xhr.response && xhr.response.error && xhr.response.error.message) {
+    throw new Error(xhr.response.error.message);
+  } else if (!(xhr.status >= 200 && xhr.status <= 206)) {
+    const statusText = xhr.status + (xhr.statusText ? " " + xhr.statusText : "");
+    throw new Error(statusText);
+  }
+  return xhr;
+},
+
 
 /**
  * Get the config of the backend server
@@ -1489,26 +1504,16 @@ scrapbook.getServerConfig = async function () {
     }
   }
 
-  const xhr = await scrapbook.xhr({
-    url: configServerRoot + '?a=config&f=json',
-    responseType: 'json',
-    method: "GET",
-    onload: true,
-  }).catch((ex) => {
-    throw new Error('Unable to connect to backend server.');
-  });
-
-  if (!xhr.response) {
-    let statusText = xhr.statusText || scrapbook.httpStatusText[xhr.status];
-    statusText = xhr.status + (statusText ? " " + statusText : "");
-    throw new Error(`Unable to load config from backend server: ${statusText}`);
+  try {
+    const xhr = await scrapbook.serverRequest({
+      url: configServerRoot + '?a=config&f=json',
+      responseType: 'json',
+      method: "GET",
+    });
+    that.cachedConfig = xhr.response.data;
+  } catch (ex) {
+    throw new Error(`Unable to load config from backend server: ${ex.message}`);
   }
-
-  if (xhr.response.error) {
-    throw new Error(`Unable to load config from backend server: ${xhr.response.error.message}`);
-  }
-
-  that.cachedConfig = xhr.response.data;
 
   // revise server root URL
   // configServerRoot may be too deep, replace with server config
@@ -1527,26 +1532,16 @@ scrapbook.getServerConfig = async function () {
  * Acquire an access token from the backend server
  */
 scrapbook.acquireServerToken = async function (url) {
-  const xhr = await scrapbook.xhr({
-    url: url + '?a=token&f=json',
-    responseType: 'json',
-    method: "GET",
-    onload: true,
-  }).catch((ex) => {
-    throw new Error('Unable to connect to backend server.');
-  });
-
-  if (!xhr.response) {
-    let statusText = xhr.statusText || scrapbook.httpStatusText[xhr.status];
-    statusText = xhr.status + (statusText ? " " + statusText : "");
-    throw new Error(`Unable to acquire access token: ${statusText}`);
+  try {
+    const xhr = await scrapbook.serverRequest({
+      url: url + '?a=token&f=json',
+      responseType: 'json',
+      method: "GET",
+    });
+    return xhr.response.data;
+  } catch (ex) {
+    throw new Error(`Unable to acquire access token: ${ex.message}`);
   }
-
-  if (xhr.response.error) {
-    throw new Error(`Unable to acquire access token: ${xhr.response.error.message}`);
-  }
-
-  return xhr.response.data;
 };
 
 
