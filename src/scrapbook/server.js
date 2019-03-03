@@ -144,15 +144,15 @@ class Server {
     }, new Map());
   }
 
-  async loadToc(bookId) {
+  async loadMeta(bookId) {
     const objList = [{}];
     const treeFiles = await this.loadTreeFiles(bookId);
     for (let i = 0; ; i++) {
-      const file = `toc${i || ""}.js`;
+      const file = `meta${i || ""}.js`;
       if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
-        const url = `${this.getBookInfo(bookId)._treeUrl}/${file}`;
+        const url = this.getBookInfo(bookId)._treeUrl + file;
         try {
-          const text = (await server.request({
+          const text = (await this.request({
             url,
             responseType: 'text',
             method: "GET",
@@ -173,15 +173,15 @@ class Server {
     return Object.assign.apply(this, objList);
   }
 
-  async loadMeta(bookId) {
+  async loadToc(bookId) {
     const objList = [{}];
     const treeFiles = await this.loadTreeFiles(bookId);
     for (let i = 0; ; i++) {
-      const file = `meta${i || ""}.js`;
+      const file = `toc${i || ""}.js`;
       if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
-        const url = `${this.getBookInfo(bookId)._treeUrl}/${file}`;
+        const url = this.getBookInfo(bookId)._treeUrl + file;
         try {
-          const text = (await server.request({
+          const text = (await this.request({
             url,
             responseType: 'text',
             method: "GET",
@@ -200,6 +200,83 @@ class Server {
       }
     }
     return Object.assign.apply(this, objList);
+  }
+
+  generateMetaFile(jsonData) {
+    return `/**
+ * Feel free to edit this file, but keep data code valid JSON format.
+ */
+scrapbook.meta(${JSON.stringify(jsonData, null, 2)})`;
+  }
+
+  generateTocFile(jsonData) {
+    return `/**
+ * Feel free to edit this file, but keep data code valid JSON format.
+ */
+scrapbook.toc(${JSON.stringify(jsonData, null, 2)})`;
+  }
+
+  async saveToc(bookId, theToc) {
+    const exportFile = async (toc, i) => {
+      const content = this.generateTocFile(toc);
+      const file = new File([content], `toc${i || ""}.js`, {type: "application/javascript"});
+      const target = this.getBookInfo(bookId)._treeUrl + file.name;
+
+      const formData = new FormData();
+      formData.append('token', await this.acquireToken(target));
+      formData.append('upload', file);
+
+      await this.request({
+        url: target + '?a=upload&f=json',
+        responseType: 'json',
+        method: "POST",
+        formData: formData,
+      });
+    };
+
+    // A javascript string >= 256 MiB (UTF-16 chars) causes an error
+    // in the browser. Split each js file at around 4 M entries to
+    // prevent the issue. (An entry is mostly < 32 bytes)
+    const sizeThreshold = 4 * 1024 * 1024;
+    const files = [];
+
+    let i = 0;
+    let size = 0;
+    let toc = {};
+    for (const id in theToc) {
+      toc[id] = theToc[id];
+      size += 1 + toc[id].length;
+
+      if (size >= sizeThreshold) {
+        await exportFile(toc, i);
+        i += 1;
+        size = 0;
+        toc = {};
+      }
+    }
+    if (Object.keys(toc).length) {
+      await exportFile(toc, i);
+      i += 1;
+    }
+
+    // remove stale toc files
+    const treeFiles = await this.loadTreeFiles(bookId);
+    for (; ; i++) {
+      const path = `toc${i}.js`;
+      if (!treeFiles.has(path)) { break; }
+
+      const target = this.getBookInfo(bookId)._treeUrl + path;
+
+      const formData = new FormData();
+      formData.append('token', await this.acquireToken(target));
+
+      const xhr = await this.request({
+        url: target + '?a=delete&f=json',
+        responseType: 'json',
+        method: "POST",
+        formData: formData,
+      });
+    }
   }
 }
 

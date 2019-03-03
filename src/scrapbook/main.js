@@ -456,10 +456,17 @@ const scrapbookUi = {
           const parentItemElem = itemElem.parentNode.parentNode;
           const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
           const index = Array.prototype.indexOf.call(siblingItems, itemElem);
+
           if (index !== -1) {
+            // remove from toc
             const parentItemId = parentItemElem.getAttribute('data-id');
             this.data.toc[parentItemId].splice(index, 1);
+
+            // remove from DOM
             siblingItems[index].remove();
+
+            // upload revised toc to server
+            await server.saveToc(this.bookId, this.data.toc);
           }
         }
         break;
