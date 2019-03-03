@@ -7,6 +7,7 @@
 
 const scrapbookUi = {
   lastHighlightElem: null,
+  bookId: null,
   book: null,
 
   data: {
@@ -68,7 +69,7 @@ const scrapbookUi = {
 
     // load scrapbooks
     try {
-      const bookId = new URL(location.href).searchParams.get('id') || '';
+      const bookId = this.bookId = new URL(location.href).searchParams.get('id') || '';
       const book = this.book = server.getBookInfo(bookId);
 
       // init book select
@@ -88,71 +89,18 @@ const scrapbookUi = {
 
     // load index
     try {
-      const response = (await scrapbook.xhr({
-        url: this.book._treeUrl + '?a=list&f=json',
-        responseType: 'json',
-        method: "GET",
-      })).response;
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      // tree/*
-      const treeFiles = response.data.reduce((data, item) => {
-        data.set(item.name, item);
-        return data;
-      }, new Map());
-
-      // tree/toc*.js
-      for (let i = 0; ; i++) {
-        const file = `toc${i || ""}.js`;
-        if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
-          try {
-            const text = (await scrapbook.xhr({
-              url: `${this.book._treeUrl}/${file}`,
-              responseType: 'text',
-              method: "GET",
-            })).response;
-
-            if (!/^(?:\/\*.*\*\/|[^(])+\(([\s\S]*)\)(?:\/\*.*\*\/|[\s;])*$/.test(text)) {
-              throw new Error(`Failed to retrieve JSON data.`);
-            }
-
-            this.toc(JSON.parse(RegExp.$1));
-          } catch (ex) {
-            throw new Error(`Error loading '${file}': ${ex.message}`);
-          }
-        } else {
-          break;
-        }
-      }
-
-      // tree/meta*.js
-      for (let i = 0; ; i++) {
-        const file = `meta${i || ""}.js`;
-        if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
-          try {
-            const text = (await scrapbook.xhr({
-              url: `${this.book._treeUrl}/${file}`,
-              responseType: 'text',
-              method: "GET",
-            })).response;
-
-            if (!/^(?:\/\*.*\*\/|[^(])+\(([\s\S]*)\)(?:\/\*.*\*\/|[\s;])*$/.test(text)) {
-              throw new Error(`Failed to retrieve JSON data.`);
-            }
-
-            this.meta(JSON.parse(RegExp.$1));
-          } catch (ex) {
-            throw new Error(`Error loading '${file}': ${ex.message}`);
-          }
-        } else {
-          break;
-        }
-      }
+      this.data.toc = await server.loadToc(this.bookId);
     } catch (ex) {
-      this.error(`Unable to load index: ${ex.message}`);
+      console.error(ex);
+      this.error(`Unable to load TOC: ${ex.message}`);
+      return;
+    }
+
+    try {
+      this.data.meta = await server.loadMeta(this.bookId);
+    } catch (ex) {
+      console.error(ex);
+      this.error(`Unable to load metadata: ${ex.message}`);
       return;
     }
 
@@ -168,7 +116,7 @@ const scrapbookUi = {
         this.addItem(id, rootElem);
       }
     } catch (ex) {
-      this.error(`Unable to load tree: ${ex.message}`);
+      this.error(`Unable to init tree: ${ex.message}`);
       return;
     }
   },
