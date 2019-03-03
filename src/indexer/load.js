@@ -424,7 +424,7 @@ const indexer = {
           try {
             if (type === 'dir') {
               const xhr = await scrapbook.xhr({
-                url: target + '?a=list&f=json',
+                url: target + '/?a=list&f=json',
                 responseType: 'json',
                 method: "GET",
               });
