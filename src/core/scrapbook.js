@@ -390,7 +390,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // for desktop browsers, open link in the same tab
+    // for desktop browsers, open link in the same tab of the main window
     if (browser.windows) {
       event.preventDefault();
       await scrapbookUi.openLink(elem.href);
