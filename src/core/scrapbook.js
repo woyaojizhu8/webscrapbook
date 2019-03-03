@@ -367,20 +367,24 @@ const scrapbookUi = {
       });
     }
   },
-};
 
-document.addEventListener('DOMContentLoaded', async () => {
-  scrapbook.loadLanguages(document);
-
-  document.getElementById("btn-refresh").addEventListener('click', async () => {
-    location.reload();
-  });
-
-  document.getElementById("book").addEventListener('change', async (event) => {
+  async onBookChange(event) {
     location.href = '?id=' + encodeURIComponent(event.target.value);
-  });
+  },
 
-  document.getElementById('item-root').addEventListener('click', async (event) => {
+  async onRefresh(event) {
+    location.reload();
+  },
+
+  async onCommandFocus(event) {
+    
+  },
+
+  async onCommandChange(event) {
+    
+  },
+
+  async onItemClick(event) {
     const selector = 'a[href]:not(.toggle)';
     let elem = event.target;
     if (!elem.matches(selector)) {
@@ -395,7 +399,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       event.preventDefault();
       await scrapbookUi.openLink(elem.href);
     }
-  }, true);
+  },
+};
 
-  await scrapbookUi.init();  
+document.addEventListener('DOMContentLoaded', async () => {
+  scrapbook.loadLanguages(document);
+
+  document.getElementById("book").addEventListener('change', scrapbookUi.onBookChange);
+
+  document.getElementById("btn-refresh").addEventListener('click', scrapbookUi.onRefresh);
+
+  document.getElementById("command").addEventListener('focus', scrapbookUi.onCommandFocus);
+
+  document.getElementById("command").addEventListener('change', scrapbookUi.onCommandChange);
+
+  document.getElementById('item-root').addEventListener('click', scrapbookUi.onItemClick);
+
+  await scrapbookUi.init();
 });
