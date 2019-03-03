@@ -194,7 +194,7 @@ const scrapbookUi = {
     const meta = this.data.meta[id];
 
     var elem = document.createElement('li');
-    elem.id = 'item-' + id;
+    elem.setAttribute('data-id', id);
     if (meta.type) { elem.setAttribute('data-type', meta.type); };
     if (meta.marked) { elem.setAttribute('data-marked', ''); }
     parent.container.appendChild(elem);
@@ -337,6 +337,13 @@ const scrapbookUi = {
   },
 
   async openLink(url, newTab) {
+    if (newTab) {
+      await browser.tabs.create({
+        url,
+      });
+      return;
+    }
+
     if (browser.windows) {
       let win;
       try {
@@ -435,7 +442,11 @@ const scrapbookUi = {
     const command = event.target.value;
     event.target.value = '';
 
-    const selectedItems = document.querySelectorAll('#item-root .highlight');
+    const selectedItems = Array.prototype.map.call(
+      document.querySelectorAll('#item-root .highlight'),
+      x => this.data.meta[x.parentNode.parentNode.getAttribute('data-id')]
+    );
+    console.warn(selectedItems);
     const item = selectedItems[0];
 
     switch (command) {
@@ -444,11 +455,19 @@ const scrapbookUi = {
         break;
       }
 
+      case 'source': {
+        if (item) {
+          const target = item.source;
+          await this.openLink(target, true);
+        }
+        break;
+      }
+
       case 'exec': {
-        if (!selectedItems.length) {
+        if (!item) {
           const target = this._topUrl;
           try {
-            let xhr = await scrapbook.xhr({
+            const xhr = await scrapbook.xhr({
               url: target + '?a=exec&f=json',
               responseType: 'json',
               method: "GET",
@@ -456,6 +475,41 @@ const scrapbookUi = {
           } catch (ex) {
             alert(`Unable to open "${target}": ${ex.message}`);
           }
+        } else {
+          const target = this._dataUrl + item.index;
+          try {
+            const xhr = await scrapbook.xhr({
+              url: target + '?a=exec&f=json',
+              responseType: 'json',
+              method: "GET",
+            });
+          } catch (ex) {
+            alert(`Unable to open "${target}": ${ex.message}`);
+          }
+        }
+        break;
+      }
+
+      case 'browse': {
+        if (item) {
+          const target = this._dataUrl + item.index;
+          try {
+            const xhr = await scrapbook.xhr({
+              url: target + '?a=browse&f=json',
+              responseType: 'json',
+              method: "GET",
+            });
+          } catch (ex) {
+            alert(`Unable to browse "${target}": ${ex.message}`);
+          }
+        }
+        break;
+      }
+
+      case 'editx': {
+        if (item) {
+          const target = this._dataUrl + item.index;
+          await this.openLink(target + '?a=editx', true);
         }
         break;
       }
