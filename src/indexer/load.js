@@ -457,7 +457,7 @@ const indexer = {
           files: [],
         };
 
-        this.log(`Got book '${bookId}' at '${book._topUrl}'.`);
+        this.log(`Got book '${book.name}' at '${book._topUrl}'.`);
         this.log(`Inspecting files...`);
         await loadEntry(book, 'data');
         await loadEntry(book, 'tree');
