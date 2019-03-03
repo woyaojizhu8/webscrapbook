@@ -52,31 +52,30 @@ const scrapbookUi = {
     // load config
     await scrapbook.loadOptions();
 
+    if (!scrapbook.hasServer()) {
+      this.log(`Backend server is not configured.`);
+      return;
+    }
+
     // load server config
-    let serverConfig;
     try {
-      serverConfig = await scrapbook.getServerConfig();
+      await server.loadConfig();
     } catch (ex) {
       console.error(ex);
       this.error(`Backend initilization error: ${ex.message}`);
       return;
     }
 
-    if (!serverConfig) {
-      this.log(`Backend server is not configured.`);
-      return;
-    }
-
     // load scrapbooks
     try {
       const bookId = new URL(location.href).searchParams.get('id') || '';
-      const book = this.data.book = serverConfig.book[bookId];
+      const book = this.data.book = server.config.book[bookId];
 
       if (!book) {
         throw new Error(`unknown scrapbook: ${bookId}`);
       }
 
-      this._topUrl = serverConfig._ServerRoot +
+      this._topUrl = server.serverRoot +
           (book.top_dir ? book.top_dir + '/' : '');
 
       this._dataUrl = this._topUrl +
@@ -90,7 +89,7 @@ const scrapbookUi = {
       // init book select
       {
         const wrapper = document.getElementById('book');
-        for (const [name, book] of Object.entries(serverConfig.book)) {
+        for (const [name, book] of Object.entries(server.config.book)) {
           const opt = document.createElement('option');
           opt.value = name;
           opt.textContent = book.name;

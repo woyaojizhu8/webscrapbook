@@ -1614,15 +1614,14 @@ capturer.saveToServer = async function (params) {
   isDebug && console.debug("call: saveToServer", params);
 
   const {timeId, blob, directory, filename, sourceUrl, options} = params;
-  const serverConfig = await scrapbook.getServerConfig();
-  const serverRoot = serverConfig._ServerRoot;
+  const serverConfig = await server.loadConfig();
 
   const target = (() => {
     const book = options["capture.scrapbook"] || '';
     const topDir = serverConfig.book[book].top_dir;
     const dataDir = serverConfig.book[book].data_dir;
     const subDir = directory.slice((options["capture.scrapbookFolder"] + "/data/").length);
-    return serverRoot +
+    return server.serverRoot +
         (topDir ? topDir + '/' : '') +
         (dataDir ? dataDir + '/' : '') +
         (subDir ? subDir + '/' : '') +
@@ -1630,18 +1629,18 @@ capturer.saveToServer = async function (params) {
   })();
 
   const formData = new FormData();
-  formData.append('token', await scrapbook.acquireServerToken(target));
+  formData.append('token', await server.acquireToken(target));
   formData.append('upload', blob);
 
-  xhr = await scrapbook.xhr({
-    url: target + '?a=upload&f=json',
-    responseType: 'json',
-    method: "POST",
-    formData: formData,
-  });
-
-  if (xhr.response.error) {
-    throw new Error(`Unable to upload to backend server: ${xhr.response.error.message}`);
+  try {
+    await server.request({
+      url: target + '?a=upload&f=json',
+      responseType: 'json',
+      method: "POST",
+      formData: formData,
+    });
+  } catch (ex) {
+    throw new Error(`Unable to upload to backend server: ${ex.message}`);
   }
 
   return filename;
