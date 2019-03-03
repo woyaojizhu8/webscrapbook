@@ -87,8 +87,9 @@ class Server {
 
       // load config from server
       {
+        const suffix = '&ts=' + Date.now(); // bust the cache
         const xhr = await this.request({
-          url: configServerRoot + '?a=config&f=json',
+          url: configServerRoot + '?a=config&f=json' + suffix,
           responseType: 'json',
           method: "GET",
         });
@@ -147,13 +148,15 @@ class Server {
   async loadMeta(bookId) {
     const objList = [{}];
     const treeFiles = await this.loadTreeFiles(bookId);
+    const prefix = this.getBookInfo(bookId)._treeUrl;
+    const suffix = '?ts=' + Date.now(); // bust the cache
     for (let i = 0; ; i++) {
       const file = `meta${i || ""}.js`;
       if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
-        const url = this.getBookInfo(bookId)._treeUrl + file;
+        const url = prefix + encodeURIComponent(file);
         try {
           const text = (await this.request({
-            url,
+            url: url + suffix,
             responseType: 'text',
             method: "GET",
           })).response;
@@ -176,13 +179,15 @@ class Server {
   async loadToc(bookId) {
     const objList = [{}];
     const treeFiles = await this.loadTreeFiles(bookId);
+    const prefix = this.getBookInfo(bookId)._treeUrl;
+    const suffix = '?ts=' + Date.now(); // bust the cache
     for (let i = 0; ; i++) {
       const file = `toc${i || ""}.js`;
       if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
-        const url = this.getBookInfo(bookId)._treeUrl + file;
+        const url = prefix + encodeURIComponent(file);
         try {
           const text = (await this.request({
-            url,
+            url: url + suffix,
             responseType: 'text',
             method: "GET",
           })).response;
