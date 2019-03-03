@@ -442,12 +442,12 @@ const scrapbookUi = {
     const command = event.target.value;
     event.target.value = '';
 
-    const selectedItems = Array.prototype.map.call(
+    const selectedItemElems = Array.prototype.map.call(
       document.querySelectorAll('#item-root .highlight'),
-      x => this.data.meta[x.parentNode.parentNode.getAttribute('data-id')]
+      x => x.parentNode.parentNode
     );
-    console.warn(selectedItems);
-    const item = selectedItems[0];
+    const id = selectedItemElems[0].getAttribute('data-id');
+    const item = this.data.meta[id];
 
     switch (command) {
       case 'index': {
@@ -510,6 +510,21 @@ const scrapbookUi = {
         if (item) {
           const target = this._dataUrl + item.index;
           await this.openLink(target + '?a=editx', true);
+        }
+        break;
+      }
+
+      case 'delete': {
+        if (item) {
+          const itemElem = selectedItemElems[0];
+          const parentItemElem = itemElem.parentNode.parentNode;
+          const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
+          const index = Array.prototype.indexOf.call(siblingItems, itemElem);
+          if (index !== -1) {
+            const parentItemId = parentItemElem.getAttribute('data-id');
+            this.data.toc[parentItemId].splice(index, 1);
+            siblingItems[index].remove();
+          }
         }
         break;
       }
