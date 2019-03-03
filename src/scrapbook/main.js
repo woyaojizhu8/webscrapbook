@@ -116,6 +116,7 @@ const scrapbookUi = {
         this.addItem(id, rootElem);
       }
     } catch (ex) {
+console.error(ex);
       this.error(`Unable to init tree: ${ex.message}`);
       return;
     }
@@ -123,6 +124,9 @@ const scrapbookUi = {
 
   addItem(id, parent) {
     const meta = this.data.meta[id];
+    if (!meta) {
+      return null;
+    }
 
     var elem = document.createElement('li');
     elem.setAttribute('data-id', id);
