@@ -73,6 +73,11 @@ function onChangeFiles(e) {
   indexer.loadInputFiles(files);
 };
 
+function onChangeLoadServer(e) {
+  e.preventDefault();
+  indexer.loadServerFiles();
+}
+
 const indexer = {
   autoEraseSet: new Set(),
 
@@ -97,6 +102,7 @@ const indexer = {
     window.addEventListener("drop", onDrop, false);
     this.dirSelector.addEventListener("change", onChangeDir, false);
     this.filesSelector.addEventListener("change", onChangeFiles, false);
+    this.loadServer.addEventListener("change", onChangeLoadServer, false);
   },
 
   uninitEvents() {
@@ -106,6 +112,7 @@ const indexer = {
     window.removeEventListener("drop", onDrop, false);
     this.dirSelector.removeEventListener("change", onChangeDir, false);
     this.filesSelector.removeEventListener("change", onChangeFiles, false);
+    this.loadServer.removeEventListener("change", onChangeLoadServer, false);
   },
 
   start() {
@@ -389,6 +396,69 @@ const indexer = {
 
       if (!hasValidEntry) {
         throw new Error(`At least one directory or zip file must be provided.`);
+      }
+    } catch (ex) {
+      console.error(ex);
+      this.error(`Unexpected error: ${ex.message}`);
+    }
+
+    await this.end();
+  },
+
+  async loadServerFiles() {
+    try {
+      await this.start();
+
+      if (!scrapbook.hasServer()) {
+        this.error(`Backend server is not configured.`);
+        return;
+      }
+
+      await server.loadConfig();
+
+      for (const bookId in server.config.book) {
+        const loadEntry = async (book, path, type = 'dir') => {
+          const target = book._topUrl + path.split('/').map(x => encodeURIComponent(x)).join('/');
+          try {
+            if (type === 'dir') {
+              const xhr = await scrapbook.xhr({
+                url: target + '?a=list&f=json',
+                responseType: 'json',
+                method: "GET",
+              });
+              for (const entry of xhr.response.data) {
+                await loadEntry(book, path + '/' + entry.name, entry.type);
+              }
+            } else {
+              const xhr = await scrapbook.xhr({
+                url: target + '?a=source',
+                responseType: 'blob',
+                method: "GET",
+              });
+              const filename = path.split('/').pop();
+              const file = new File([xhr.response], filename, {
+                type: Mime.lookup(filename),
+                lastModified: new Date(xhr.getResponseHeader('last-modified')).valueOf(),
+              });
+              inputData.files.push({
+                path,
+                file,
+              });
+            }
+          } catch (ex) {
+            this.error(`Unable to load "${target}": ${ex.message}`);
+          }
+        };
+        const book = server.getBookInfo(bookId);
+        const inputData = {
+          name: book.name,
+          files: [],
+        };
+
+        this.log(`Got book '${bookId}' at '${book._topUrl}'.`);
+        this.log(`Inspecting files...`);
+        await loadEntry(book, 'data');
+        await this.import(inputData);
       }
     } catch (ex) {
       console.error(ex);
@@ -3263,10 +3333,12 @@ document.addEventListener("DOMContentLoaded", async function () {
   indexer.downloader = document.getElementById('downloader');
   indexer.dirSelector = document.getElementById('dir-selector');
   indexer.filesSelector = document.getElementById('files-selector');
+  indexer.loadServer = document.getElementById('load-server');
   indexer.logger = document.getElementById('logger');
 
   const dirSelectorLabel = document.getElementById('dir-selector-label');
   const filesSelectorLabel = document.getElementById('files-selector-label');
+  const loadServerLabel = document.getElementById('load-server-label');
 
   await scrapbook.loadOptionsAuto;
 
@@ -3282,4 +3354,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     dirSelectorLabel.hidden = false;
   }
   filesSelectorLabel.hidden = false;
+  if (scrapbook.hasServer()) {
+    loadServerLabel.hidden = false;
+  }
 });

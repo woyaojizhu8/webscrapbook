@@ -10,6 +10,7 @@
 <script src="../lib/sha_dev.js"></script>
 <script src="../lib/browser-polyfill.js"></script>
 <script src="../core/common.js"></script>
+<script src="../scrapbook/server.js"></script>
 <script src="../core/optionsAuto.js"></script>
 <script src="load.js"></script>
 </head>
@@ -20,6 +21,8 @@
 <input type="file" id="dir-selector" webkitdirectory directory hidden>
 <label id="files-selector-label" for="files-selector" hidden>__MSG_IndexerPickFiles__</label>
 <input type="file" id="files-selector" hidden multiple>
+<label id="load-server-label" for="load-server" hidden>__MSG_IndexerLoadServer__</label>
+<input type="checkbox" id="load-server" hidden>
 </div>
 <div id="logger" class="wrap">__MSG_IndexerDesc__</div>
 <div id="dropmask" hidden></div>
