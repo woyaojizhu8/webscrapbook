@@ -122,6 +122,7 @@ const indexer = {
     this.logger.textContent = '';
     this.logger.className = '';
     this.options = Object.assign({}, scrapbook.options);
+    this.isIndexingServer = false;
   },
 
   end() {
@@ -414,6 +415,7 @@ const indexer = {
         return;
       }
 
+      this.isIndexingServer = true;
       await server.loadConfig();
 
       for (const bookId in server.config.book) {
@@ -1740,6 +1742,28 @@ const indexer = {
     }
     if (!hasNewFile) {
       this.log(`Current files are already up-to-date.`);
+      return;
+    }
+
+    // server
+    if (this.isIndexingServer) {
+console.warn('indexing server');
+      for (const [inZipPath, zipObj] of Object.entries(zip.files)) {
+        if (zipObj.dir) { return; }
+console.warn(inZipPath, zipObj);
+        // try {
+          // const blob = await zipObj.async("blob");
+          // const downloadId = await browser.downloads.download({
+            // url: URL.createObjectURL(blob),
+            // filename: directory + "/" + inZipPath,
+            // conflictAction: "overwrite",
+            // saveAs: false,
+          // });
+          // this.autoEraseSet.add(downloadId);
+        // } catch (ex) {
+          // this.error(`Error downloading ${directory + "/" + inZipPath}: ${ex.message}`);
+        // }
+      }
       return;
     }
 
