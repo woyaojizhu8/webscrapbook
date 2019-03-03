@@ -393,11 +393,73 @@ const scrapbookUi = {
   },
 
   async onCommandFocus(event) {
-    
+    const selectedItems = document.querySelectorAll('#item-root .highlight');
+    const cmdElem = document.getElementById('command');
+
+    switch (selectedItems.length) {
+      case 0: {
+        cmdElem.querySelector('option[value="index"]').hidden = false;
+        cmdElem.querySelector('option[value="source"]').hidden = true;
+        cmdElem.querySelector('option[value="exec"]').hidden = false;
+        cmdElem.querySelector('option[value="browse"]').hidden = true;
+        cmdElem.querySelector('option[value="mkdir"]').hidden = false;
+        cmdElem.querySelector('option[value="mksep"]').hidden = false;
+        cmdElem.querySelector('option[value="mknote"]').hidden = false;
+        cmdElem.querySelector('option[value="editx"]').hidden = true;
+        cmdElem.querySelector('option[value="upload"]').hidden = false;
+        cmdElem.querySelector('option[value="move"]').hidden = true;
+        cmdElem.querySelector('option[value="copy"]').hidden = true;
+        cmdElem.querySelector('option[value="delete"]').hidden = true;
+        break;
+      }
+
+      case 1: {
+        cmdElem.querySelector('option[value="index"]').hidden = true;
+        cmdElem.querySelector('option[value="source"]').hidden = false;
+        cmdElem.querySelector('option[value="exec"]').hidden = false;
+        cmdElem.querySelector('option[value="browse"]').hidden = false;
+        cmdElem.querySelector('option[value="mkdir"]').hidden = true;
+        cmdElem.querySelector('option[value="mksep"]').hidden = true;
+        cmdElem.querySelector('option[value="mknote"]').hidden = true;
+        cmdElem.querySelector('option[value="editx"]').hidden = false;
+        cmdElem.querySelector('option[value="upload"]').hidden = true;
+        cmdElem.querySelector('option[value="move"]').hidden = false;
+        cmdElem.querySelector('option[value="copy"]').hidden = false;
+        cmdElem.querySelector('option[value="delete"]').hidden = false;
+        break;
+      }
+    }
   },
 
   async onCommandChange(event) {
-    
+    const command = event.target.value;
+    event.target.value = '';
+
+    const selectedItems = document.querySelectorAll('#item-root .highlight');
+    const item = selectedItems[0];
+
+    switch (command) {
+      case 'index': {
+        this.openLink(this._indexUrl);
+        break;
+      }
+
+      case 'exec': {
+        if (!selectedItems.length) {
+          const target = this._topUrl;
+          try {
+            let xhr = await scrapbook.xhr({
+              url: target + '?a=exec&f=json',
+              responseType: 'json',
+              method: "GET",
+            });
+          } catch (ex) {
+            alert(`Unable to open "${target}": ${ex.message}`);
+          }
+        }
+        break;
+      }
+    }
   },
 
   async onItemClick(event) {
@@ -427,7 +489,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById("command").addEventListener('focus', scrapbookUi.onCommandFocus);
 
-  document.getElementById("command").addEventListener('change', scrapbookUi.onCommandChange);
+  document.getElementById("command").addEventListener('change', scrapbookUi.onCommandChange.bind(scrapbookUi));
 
   document.getElementById('item-root').addEventListener('click', scrapbookUi.onItemClick);
 
