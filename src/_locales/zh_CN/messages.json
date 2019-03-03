@@ -93,6 +93,9 @@
   "IndexerHeader": {
     "message": "选择网页剪贴簿文件夹或其 ZIP 压缩文件。你可以拖放它们至此窗口，或使用以下按钮："
   },
+  "IndexerLoadServer": {
+    "message": "载入服务器"
+  },
   "IndexerPickDir": {
     "message": "选择文件夹"
   },

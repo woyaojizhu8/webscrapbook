@@ -93,6 +93,9 @@
   "IndexerHeader": {
     "message": "Pick directories or ZIP archive files of a WebScrapBook folder, via dropping them into this window, or using the buttons below:"
   },
+  "IndexerLoadServer": {
+    "message": "Load from server"
+  },
   "IndexerPickDir": {
     "message": "Pick a folder"
   },
