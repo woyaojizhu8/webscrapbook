@@ -7,9 +7,9 @@
 
 const scrapbookUi = {
   lastHighlightElem: null,
+  book: null,
 
   data: {
-    book: null,
     toc: {},
     meta: {},
   },
@@ -69,35 +69,18 @@ const scrapbookUi = {
     // load scrapbooks
     try {
       const bookId = new URL(location.href).searchParams.get('id') || '';
-      const book = this.data.book = server.config.book[bookId];
-
-      if (!book) {
-        throw new Error(`unknown scrapbook: ${bookId}`);
-      }
-
-      this._topUrl = server.serverRoot +
-          (book.top_dir ? book.top_dir + '/' : '');
-
-      this._dataUrl = this._topUrl +
-          (book.data_dir ? book.data_dir + '/' : '');
-
-      this._treeUrl = this._topUrl +
-          (book.tree_dir ? book.tree_dir + '/' : '');
-
-      this._indexUrl = this._topUrl + book.index;
+      const book = this.book = server.getBookInfo(bookId);
 
       // init book select
-      {
-        const wrapper = document.getElementById('book');
-        for (const [name, book] of Object.entries(server.config.book)) {
-          const opt = document.createElement('option');
-          opt.value = name;
-          opt.textContent = book.name;
-          wrapper.appendChild(opt);
-        }
-        wrapper.value = bookId;
-        wrapper.hidden = false;
+      const wrapper = document.getElementById('book');
+      for (const [name, book] of Object.entries(server.config.book)) {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = book.name;
+        wrapper.appendChild(opt);
       }
+      wrapper.value = bookId;
+      wrapper.hidden = false;
     } catch (ex) {
       this.error(`Unable to load scrapbooks: ${ex.message}`);
       return;
@@ -106,7 +89,7 @@ const scrapbookUi = {
     // load index
     try {
       const response = (await scrapbook.xhr({
-        url: this._treeUrl + '?a=list&f=json',
+        url: this.book._treeUrl + '?a=list&f=json',
         responseType: 'json',
         method: "GET",
       })).response;
@@ -127,7 +110,7 @@ const scrapbookUi = {
         if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
           try {
             const text = (await scrapbook.xhr({
-              url: `${this._treeUrl}/${file}`,
+              url: `${this.book._treeUrl}/${file}`,
               responseType: 'text',
               method: "GET",
             })).response;
@@ -151,7 +134,7 @@ const scrapbookUi = {
         if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
           try {
             const text = (await scrapbook.xhr({
-              url: `${this._treeUrl}/${file}`,
+              url: `${this.book._treeUrl}/${file}`,
               responseType: 'text',
               method: "GET",
             })).response;
@@ -207,12 +190,12 @@ const scrapbookUi = {
       var a = document.createElement('a');
       a.appendChild(document.createTextNode(meta.title || id));
       if (meta.type !== 'bookmark') {
-        if (meta.index) { a.href = this._dataUrl + scrapbook.escapeFilename(meta.index); }
+        if (meta.index) { a.href = this.book._dataUrl + scrapbook.escapeFilename(meta.index); }
       } else {
         if (meta.source) {
           a.href = meta.source;
         } else {
-          if (meta.index) { a.href = this._dataUrl + scrapbook.escapeFilename(meta.index); }
+          if (meta.index) { a.href = this.book._dataUrl + scrapbook.escapeFilename(meta.index); }
         }
       }
       if (meta.comment) { a.title = meta.comment; }
@@ -223,7 +206,7 @@ const scrapbookUi = {
       if (meta.icon) {
         icon.src = /^(?:[a-z][a-z0-9+.-]*:|[/])/i.test(meta.icon || "") ? 
             meta.icon : 
-            (this._dataUrl + scrapbook.escapeFilename(meta.index || "")).replace(/[/][^/]+$/, '/') + meta.icon;
+            (this.book._dataUrl + scrapbook.escapeFilename(meta.index || "")).replace(/[/][^/]+$/, '/') + meta.icon;
       } else {
         icon.src = {
           'folder': browser.runtime.getURL('resources/fclose.png'),
@@ -446,12 +429,17 @@ const scrapbookUi = {
       document.querySelectorAll('#item-root .highlight'),
       x => x.parentNode.parentNode
     );
-    const id = selectedItemElems[0].getAttribute('data-id');
-    const item = this.data.meta[id];
+    let id;
+    let item;
+
+    if (selectedItemElems[0]) {
+      id = selectedItemElems[0].getAttribute('data-id');
+      item = this.data.meta[id];
+    }
 
     switch (command) {
       case 'index': {
-        this.openLink(this._indexUrl);
+        this.openLink(this.book._indexUrl);
         break;
       }
 
@@ -465,7 +453,7 @@ const scrapbookUi = {
 
       case 'exec': {
         if (!item) {
-          const target = this._topUrl;
+          const target = this.book._topUrl;
           try {
             const xhr = await scrapbook.xhr({
               url: target + '?a=exec&f=json',
@@ -476,7 +464,7 @@ const scrapbookUi = {
             alert(`Unable to open "${target}": ${ex.message}`);
           }
         } else {
-          const target = this._dataUrl + item.index;
+          const target = this.book._dataUrl + item.index;
           try {
             const xhr = await scrapbook.xhr({
               url: target + '?a=exec&f=json',
@@ -492,7 +480,7 @@ const scrapbookUi = {
 
       case 'browse': {
         if (item) {
-          const target = this._dataUrl + item.index;
+          const target = this.book._dataUrl + item.index;
           try {
             const xhr = await scrapbook.xhr({
               url: target + '?a=browse&f=json',
@@ -508,7 +496,7 @@ const scrapbookUi = {
 
       case 'editx': {
         if (item) {
-          const target = this._dataUrl + item.index;
+          const target = this.book._dataUrl + item.index;
           await this.openLink(target + '?a=editx', true);
         }
         break;

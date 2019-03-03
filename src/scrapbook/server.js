@@ -12,6 +12,7 @@ class Server {
   constructor () {
     this._config = null;
     this._serverRoot = null;
+    this._books = {};
   }
 
   get serverRoot() {
@@ -20,6 +21,28 @@ class Server {
 
   get config() {
     return this._config;
+  }
+
+  getBookInfo(bookId) {
+    if (!this._books[bookId]) {
+      const book = this._books[bookId] = this.config.book[bookId];
+
+      if (!book) {
+        throw new Error(`unknown scrapbook: ${bookId}`);
+      }
+
+      book._topUrl = this.serverRoot +
+        (book.top_dir ? book.top_dir + '/' : '');
+
+      book._dataUrl = book._topUrl +
+          (book.data_dir ? book.data_dir + '/' : '');
+
+      book._treeUrl = book._topUrl +
+          (book.tree_dir ? book.tree_dir + '/' : '');
+
+      book._indexUrl = book._topUrl + book.index;
+    }
+    return this._books[bookId];
   }
 
   /**
