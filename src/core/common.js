@@ -1459,7 +1459,6 @@ scrapbook.xhr = async function (params = {}) {
   });
 };
 
-
 /**
  * Check for whether a server backend is set
  */
@@ -1486,8 +1485,7 @@ scrapbook.serverRequest = async function (params = {}) {
     throw new Error(statusText);
   }
   return xhr;
-},
-
+};
 
 /**
  * Get the config of the backend server
@@ -1535,7 +1533,6 @@ scrapbook.getServerConfig = async function () {
 
   return that.cachedConfig;
 };
-
 
 /**
  * Acquire an access token from the backend server
