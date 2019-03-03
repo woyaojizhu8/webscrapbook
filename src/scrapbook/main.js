@@ -439,7 +439,7 @@ const scrapbookUi = {
 
     switch (command) {
       case 'index': {
-        this.openLink(this.book._indexUrl);
+        this.openLink(this.book._indexUrl, true);
         break;
       }
 
