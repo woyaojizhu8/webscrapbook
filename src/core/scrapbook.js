@@ -53,19 +53,22 @@ const scrapbookUi = {
     await scrapbook.loadOptions();
 
     // load server config
+    let serverConfig;
     try {
-      let serverConfig;
-      try {
-        serverConfig = await scrapbook.getServerConfig();
-      } catch (ex) {
-        throw ex;
-      }
+      serverConfig = await scrapbook.getServerConfig();
+    } catch (ex) {
+      console.error(ex);
+      this.error(`Backend initilization error: ${ex.message}`);
+      return;
+    }
 
-      if (!serverConfig) {
-        this.log(`Backend server is not configured.`);
-        return;
-      }
+    if (!serverConfig) {
+      this.log(`Backend server is not configured.`);
+      return;
+    }
 
+    // load scrapbooks
+    try {
       const bookId = new URL(location.href).searchParams.get('id') || '';
       const book = this.data.book = serverConfig.book[bookId];
 
@@ -97,7 +100,7 @@ const scrapbookUi = {
         wrapper.hidden = false;
       }
     } catch (ex) {
-      this.error(`Unable to load scrapbook: ${ex.message}`);
+      this.error(`Unable to load scrapbooks: ${ex.message}`);
       return;
     }
 

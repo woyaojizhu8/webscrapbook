@@ -1473,7 +1473,12 @@ scrapbook.hasServer = function () {
  */
 scrapbook.serverRequest = async function (params = {}) {
   params.onload = true;
-  const xhr = await scrapbook.xhr(params);
+  let xhr;
+  try {
+    xhr = await scrapbook.xhr(params);
+  } catch (ex) {
+    throw new Error('Unable to connect to backend server.');
+  }
   if (xhr.response && xhr.response.error && xhr.response.error.message) {
     throw new Error(xhr.response.error.message);
   } else if (!(xhr.status >= 200 && xhr.status <= 206)) {
@@ -1504,19 +1509,23 @@ scrapbook.getServerConfig = async function () {
     }
   }
 
-  try {
+  // load config from server
+  {
     const xhr = await scrapbook.serverRequest({
       url: configServerRoot + '?a=config&f=json',
       responseType: 'json',
       method: "GET",
     });
+
+    if (!xhr.response || !xhr.response.data) {
+      throw new Error('The server does not support WebScrapBook protocol.');
+    }
+
     that.cachedConfig = xhr.response.data;
-  } catch (ex) {
-    throw new Error(`Unable to load config from backend server: ${ex.message}`);
   }
 
   // revise server root URL
-  // configServerRoot may be too deep, replace with server config
+  // configServerRoot may be too deep, replace with server configured base path
   {
     const urlObj = new URL(configServerRoot);
     urlObj.search = urlObj.search.hash = '';
