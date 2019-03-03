@@ -122,7 +122,7 @@ const indexer = {
     this.logger.textContent = '';
     this.logger.className = '';
     this.options = Object.assign({}, scrapbook.options);
-    this.isIndexingServer = false;
+    this.serverData = {};
   },
 
   end() {
@@ -415,7 +415,7 @@ const indexer = {
         return;
       }
 
-      this.isIndexingServer = true;
+      this.serverData.isIndexingServer = true;
       await server.loadConfig();
 
       for (const bookId in server.config.book) {
@@ -451,7 +451,7 @@ const indexer = {
             this.error(`Unable to load "${target}": ${ex.message}`);
           }
         };
-        const book = server.getBookInfo(bookId);
+        const book = this.serverData.book = server.getBookInfo(bookId);
         const inputData = {
           name: book.name,
           files: [],
@@ -460,6 +460,7 @@ const indexer = {
         this.log(`Got book '${bookId}' at '${book._topUrl}'.`);
         this.log(`Inspecting files...`);
         await loadEntry(book, 'data');
+        await loadEntry(book, 'tree');
         await this.import(inputData);
       }
     } catch (ex) {
@@ -1746,23 +1747,29 @@ const indexer = {
     }
 
     // server
-    if (this.isIndexingServer) {
-console.warn('indexing server');
+    if (this.serverData.isIndexingServer) {
+      this.log(`Uploading changed files to server...`);
+      const book = this.serverData.book;
       for (const [inZipPath, zipObj] of Object.entries(zip.files)) {
-        if (zipObj.dir) { return; }
-console.warn(inZipPath, zipObj);
-        // try {
-          // const blob = await zipObj.async("blob");
-          // const downloadId = await browser.downloads.download({
-            // url: URL.createObjectURL(blob),
-            // filename: directory + "/" + inZipPath,
-            // conflictAction: "overwrite",
-            // saveAs: false,
-          // });
-          // this.autoEraseSet.add(downloadId);
-        // } catch (ex) {
-          // this.error(`Error downloading ${directory + "/" + inZipPath}: ${ex.message}`);
-        // }
+        if (zipObj.dir) { continue; }
+
+        const file = new File(
+          [await zipObj.async('blob')],
+          inZipPath.split('/').pop(),
+          {type: "application/octet-stream"}
+        );
+        const target = book._topUrl + inZipPath.split('/').map(x => encodeURIComponent(x)).join('/');
+
+        const formData = new FormData();
+        formData.append('token', await server.acquireToken(target));
+        formData.append('upload', file);
+
+        await server.request({
+          url: target + '?a=upload&f=json',
+          responseType: 'json',
+          method: "POST",
+          formData: formData,
+        });
       }
       return;
     }
