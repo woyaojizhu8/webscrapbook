@@ -102,7 +102,7 @@ const indexer = {
     window.addEventListener("drop", onDrop, false);
     this.dirSelector.addEventListener("change", onChangeDir, false);
     this.filesSelector.addEventListener("change", onChangeFiles, false);
-    this.loadServer.addEventListener("change", onChangeLoadServer, false);
+    this.loadServerLabel.addEventListener("click", onChangeLoadServer, false);
   },
 
   uninitEvents() {
@@ -112,7 +112,7 @@ const indexer = {
     window.removeEventListener("drop", onDrop, false);
     this.dirSelector.removeEventListener("change", onChangeDir, false);
     this.filesSelector.removeEventListener("change", onChangeFiles, false);
-    this.loadServer.removeEventListener("change", onChangeLoadServer, false);
+    this.loadServerLabel.removeEventListener("click", onChangeLoadServer, false);
   },
 
   start() {
@@ -3364,12 +3364,11 @@ document.addEventListener("DOMContentLoaded", async function () {
   indexer.downloader = document.getElementById('downloader');
   indexer.dirSelector = document.getElementById('dir-selector');
   indexer.filesSelector = document.getElementById('files-selector');
-  indexer.loadServer = document.getElementById('load-server');
+  indexer.loadServerLabel = document.getElementById('load-server-label');
   indexer.logger = document.getElementById('logger');
 
   const dirSelectorLabel = document.getElementById('dir-selector-label');
   const filesSelectorLabel = document.getElementById('files-selector-label');
-  const loadServerLabel = document.getElementById('load-server-label');
 
   await scrapbook.loadOptionsAuto;
 
@@ -3386,6 +3385,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
   filesSelectorLabel.hidden = false;
   if (scrapbook.hasServer()) {
-    loadServerLabel.hidden = false;
+    indexer.loadServerLabel.hidden = false;
   }
 });
