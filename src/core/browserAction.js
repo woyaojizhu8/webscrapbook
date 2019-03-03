@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById("openScrapBook").addEventListener('click', async (event) => {
-    const url = browser.runtime.getURL("core/scrapbook.html");
+    const url = browser.runtime.getURL("scrapbook/main.html");
 
     if (browser.sidebarAction) {
       await browser.sidebarAction.open();

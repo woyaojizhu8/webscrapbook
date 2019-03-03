@@ -451,9 +451,6 @@
   "OptionViewerViewMaffTooltip": {
     "message": "When the browser loads a MAFF file, view it with the viewer. Check \"Allow access to file URLs\" in a supported browser to enable opening such files directly."
   },
-  "ScrapBookLoaderTitle": {
-    "message": "Load scrapbook"
-  },
   "ViewerDesc": {
     "message": "Pick HTZ or MAFF archive files to open, via dropping them into this window, or using the buttons below:"
   },
