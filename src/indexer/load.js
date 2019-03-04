@@ -420,7 +420,7 @@ const indexer = {
 
       for (const book of Object.values(server.books)) {
         const loadEntry = async (book, path, type = 'dir') => {
-          const target = book.topUrl + path.split('/').map(x => encodeURIComponent(x)).join('/');
+          const target = book.topUrl + scrapbook.escapeFilename(path);
           try {
             if (type === 'dir') {
               const xhr = await scrapbook.xhr({
@@ -1760,10 +1760,10 @@ const indexer = {
           inZipPath.split('/').pop(),
           {type: "application/octet-stream"}
         );
-        const target = book.topUrl + inZipPath.split('/').map(x => encodeURIComponent(x)).join('/');
+        const target = book.topUrl + scrapbook.escapeFilename(inZipPath);
 
         const formData = new FormData();
-        formData.append('token', await server.acquireToken(target));
+        formData.append('token', await server.acquireToken());
         formData.append('upload', file);
 
         await server.request({
