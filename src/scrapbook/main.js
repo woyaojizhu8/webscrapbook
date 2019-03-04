@@ -209,7 +209,7 @@ console.error(ex);
     if (willOpen && !elem.hasChildNodes())  {
       const itemElem = elem.parentNode;
 
-      for (const id of this.data.toc[itemElem.id.slice(5)]) {
+      for (const id of this.data.toc[itemElem.getAttribute('data-id')]) {
         this.addItem(id, itemElem);
       }
     }
