@@ -13,7 +13,8 @@
 </head>
 <body>
 <div id="wrapper">
-  <div id="toolbar">
+  <form id="toolbar">
+  <fieldset>
     <select id="book" hidden></select>
     <button id="btn-refresh" type="button">R</button>
     <select id="command">
@@ -31,7 +32,8 @@
       <option value="copy" hidden>Copy</option>
       <option value="delete" hidden>Delete</option>
     </select>
-  </div>
+  </fieldset>
+  </form>
   <div id="logger"></div>
   <div id="item-root" data-id="root"></div>
 </div>

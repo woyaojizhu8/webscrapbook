@@ -16,6 +16,12 @@ body {
   border-bottom: 2px ridge #CCCCCC;
 }
 
+#toolbar fieldset {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
 #toolbar button {
   margin: 3px;
 }

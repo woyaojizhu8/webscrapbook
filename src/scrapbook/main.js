@@ -27,6 +27,10 @@ const scrapbookUi = {
     span.appendChild(document.createTextNode(msg + '\n'));
     document.getElementById("logger").appendChild(span);
   },
+
+  enableToolbar(willEnable) {
+    document.getElementById('toolbar').querySelector('fieldset').disabled = !willEnable;
+  },
   
   async init() {
     // UI reset
@@ -308,11 +312,15 @@ const scrapbookUi = {
   },
 
   async onBookChange(event) {
+    this.enableToolbar(false);
     location.href = '?id=' + encodeURIComponent(event.target.value);
+    this.enableToolbar(true);
   },
 
   async onRefresh(event) {
+    this.enableToolbar(false);
     location.reload();
+    this.enableToolbar(true);
   },
 
   async onCommandFocus(event) {
@@ -362,6 +370,8 @@ const scrapbookUi = {
   async onCommandChange(event) {
     const command = event.target.value;
     event.target.value = '';
+
+    this.enableToolbar(false);
 
     const selectedItemElems = Array.prototype.map.call(
       document.querySelectorAll('#item-root .highlight'),
@@ -501,6 +511,8 @@ const scrapbookUi = {
         break;
       }
     }
+
+    this.enableToolbar(true);
   },
 
   async onItemClick(event) {
