@@ -32,24 +32,33 @@ const scrapbookUi = {
     document.getElementById('toolbar').querySelector('fieldset').disabled = !willEnable;
   },
 
+  /**
+   * @param {HTMLElement} elem - the element to be inserted to the dialog.
+   *     A 'resolve' attribute will be bind to elem, which can be call to close the dialog.
+   */
   async showDialog(elem) {
     const mask = document.getElementById('dialog-mask');
     const wrapper = document.getElementById('dialog-wrapper');
     wrapper.innerHTML = '';
     wrapper.appendChild(elem);
 
-    return new Promise((resolve, reject) => {
-      const onClick = (event) => {
-        if (event.target === mask) {
-          mask.removeEventListener('click', onClick);
-          mask.hidden = true;
-          resolve();
-        }
-      };
+    const onClick = (event) => {
+      if (event.target === mask) {
+        elem.resolve();
+      }
+    };
 
-      mask.addEventListener('click', onClick);
-      mask.hidden = false;
+    mask.addEventListener('click', onClick);
+    mask.hidden = false;
+
+    const result = await new Promise((resolve, reject) => {
+      elem.resolve = resolve;
     });
+
+    mask.removeEventListener('click', onClick);
+    mask.hidden = true;
+
+    return result;
   },
   
   async init() {
