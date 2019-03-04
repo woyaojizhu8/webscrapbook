@@ -438,6 +438,8 @@ const scrapbookUi = {
       case 'delete': {
         if (item) {
           const itemElem = selectedItemElems[0];
+          const itemId = itemElem.getAttribute('data-id');
+
           const parentItemElem = itemElem.parentNode.parentNode;
           const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
           const index = Array.prototype.indexOf.call(siblingItems, itemElem);
@@ -447,11 +449,48 @@ const scrapbookUi = {
             const parentItemId = parentItemElem.getAttribute('data-id');
             this.book.toc[parentItemId].splice(index, 1);
 
+            // upload revised toc to server
+            try {
+              await this.book.saveToc();
+            } catch (ex) {
+              alert(`Unable to delete toc of '${itemId}': ${ex.message}`);
+              break;
+            }
+
+            // remove data and meta if no longer referred in the DOM
+            if (!Array.prototype.some.call(
+                  document.getElementById('item-root').querySelectorAll('li[data-id]'),
+                  x => x.getAttribute('data-id') === itemId && x !== itemElem
+                )) {
+              try {
+                const index = this.book.meta[itemId].index.replace(/\/index.html$/, '');
+                const target = this.book.dataUrl + scrapbook.escapeFilename(index);
+
+                const formData = new FormData();
+                formData.append('token', await server.acquireToken());
+
+                await server.request({
+                  url: target + '?a=delete&f=json',
+                  responseType: 'json',
+                  method: "POST",
+                  formData: formData,
+                });
+              } catch (ex) {
+                alert(`Unable to delete data of '${itemId}': ${ex.message}`);
+                break;
+              }
+
+              try {
+                delete this.book.meta[itemId];
+                await this.book.saveMeta();
+              } catch (ex) {
+                alert(`Unable to delete metadata of '${itemId}': ${ex.message}`);
+                break;
+              }
+            }
+
             // remove from DOM
             siblingItems[index].remove();
-
-            // upload revised toc to server
-            await this.book.saveToc();
           }
         }
         break;

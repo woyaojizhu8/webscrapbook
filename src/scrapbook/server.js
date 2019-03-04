@@ -223,7 +223,70 @@ class Book {
     return this.toc = Object.assign.apply(this, objList);
   }
 
-  async saveToc(theToc) {
+  async saveMeta() {
+    const exportFile = async (meta, i) => {
+      const content = this.generateMetaFile(meta);
+      const file = new File([content], `meta${i || ""}.js`, {type: "application/javascript"});
+      const target = this.treeUrl + file.name;
+
+      const formData = new FormData();
+      formData.append('token', await this.server.acquireToken());
+      formData.append('upload', file);
+
+      await this.server.request({
+        url: target + '?a=upload&f=json',
+        responseType: 'json',
+        method: "POST",
+        formData: formData,
+      });
+    };
+
+    // A javascript string >= 256 MiB (UTF-16 chars) causes an error
+    // in the browser. Split each js file at around 256 K items to
+    // prevent the issue. (An item is mostly < 512 bytes)
+    const sizeThreshold = 256 * 1024;
+    const files = [];
+
+    let i = 0;
+    let size = 0;
+    let meta = {};
+    for (const id in this.meta) {
+      meta[id] = this.meta[id];
+      size += 1 + meta[id].length;
+
+      if (size >= sizeThreshold) {
+        await exportFile(meta, i);
+        i += 1;
+        size = 0;
+        meta = {};
+      }
+    }
+    if (Object.keys(meta).length) {
+      await exportFile(meta, i);
+      i += 1;
+    }
+
+    // remove stale meta files
+    const treeFiles = await this.loadTreeFiles();
+    for (; ; i++) {
+      const path = `meta${i}.js`;
+      if (!treeFiles.has(path)) { break; }
+
+      const target = this.treeUrl + path;
+
+      const formData = new FormData();
+      formData.append('token', await this.server.acquireToken());
+
+      const xhr = await this.server.request({
+        url: target + '?a=delete&f=json',
+        responseType: 'json',
+        method: "POST",
+        formData: formData,
+      });
+    }
+  }
+
+  async saveToc() {
     const exportFile = async (toc, i) => {
       const content = this.generateTocFile(toc);
       const file = new File([content], `toc${i || ""}.js`, {type: "application/javascript"});
