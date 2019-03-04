@@ -205,11 +205,6 @@ const scrapbookUi = {
       }
       icon.alt = "";
       a.insertBefore(icon, a.firstChild);
-
-      var childIdList = this.book.toc[id];
-      if (childIdList && childIdList.length) {
-        this.itemMakeContainer(elem);
-      }
     } else {
       var line = document.createElement('fieldset');
       if (meta.comment) { line.title = meta.comment; }
@@ -218,6 +213,11 @@ const scrapbookUi = {
       var legend = document.createElement('legend');
       legend.appendChild(document.createTextNode('\xA0' + (meta.title || '') + '\xA0'));
       line.appendChild(legend);
+    }
+
+    var childIdList = this.book.toc[id];
+    if (childIdList && childIdList.length) {
+      this.itemMakeContainer(elem);
     }
 
     return elem;

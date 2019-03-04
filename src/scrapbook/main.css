@@ -105,6 +105,7 @@ body {
 }
 
 #item-root a.toggle {
+  position: absolute;
   margin-__MSG_@@bidi_start_edge__: -1.45em;
 }
 
