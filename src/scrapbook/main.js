@@ -136,6 +136,28 @@ const scrapbookUi = {
     }
   },
 
+  itemMakeContainer(elem) {
+    if (!elem.container) {
+      const div = elem.firstChild;
+
+      const toggle = elem.toggle = document.createElement('a');
+      toggle.href = '#';
+      toggle.className = 'toggle';
+      toggle.onclick = this.onClickToggle.bind(this);
+      div.insertBefore(toggle, div.firstChild);
+
+      const toggleImg = document.createElement('img');
+      toggleImg.src = browser.runtime.getURL('resources/collapse.png');
+      toggleImg.alt = '';
+      toggle.appendChild(toggleImg);
+
+      const container = elem.container = document.createElement('ul');
+      container.className = 'container';
+      container.hidden = true;
+      elem.appendChild(container);
+    }
+  },
+
   addItem(id, parent) {
     const meta = this.book.meta[id];
     if (!meta) {
@@ -146,6 +168,7 @@ const scrapbookUi = {
     elem.setAttribute('data-id', id);
     if (meta.type) { elem.setAttribute('data-type', meta.type); };
     if (meta.marked) { elem.setAttribute('data-marked', ''); }
+    this.itemMakeContainer(parent);
     parent.container.appendChild(elem);
 
     var div = document.createElement('div');
@@ -185,21 +208,7 @@ const scrapbookUi = {
 
       var childIdList = this.book.toc[id];
       if (childIdList && childIdList.length) {
-        elem.toggle = document.createElement('a');
-        elem.toggle.href = '#';
-        elem.toggle.className = 'toggle';
-        elem.toggle.onclick = this.onClickToggle.bind(this);
-        div.insertBefore(elem.toggle, div.firstChild);
-
-        var toggleImg = document.createElement('img');
-        toggleImg.src = browser.runtime.getURL('resources/collapse.png');
-        toggleImg.alt = '';
-        elem.toggle.appendChild(toggleImg);
-
-        elem.container = document.createElement('ul');
-        elem.container.className = 'container';
-        elem.container.hidden = true;
-        elem.appendChild(elem.container);
+        this.itemMakeContainer(elem);
       }
     } else {
       var line = document.createElement('fieldset');
@@ -372,7 +381,9 @@ const scrapbookUi = {
         cmdElem.querySelector('option[value="mknote"]').hidden = false;
         cmdElem.querySelector('option[value="editx"]').hidden = true;
         cmdElem.querySelector('option[value="upload"]').hidden = false;
-        cmdElem.querySelector('option[value="move"]').hidden = true;
+        cmdElem.querySelector('option[value="move_up"]').hidden = true;
+        cmdElem.querySelector('option[value="move_down"]').hidden = true;
+        cmdElem.querySelector('option[value="move_into"]').hidden = true;
         cmdElem.querySelector('option[value="copy"]').hidden = true;
         cmdElem.querySelector('option[value="delete"]').hidden = true;
         break;
@@ -391,7 +402,9 @@ const scrapbookUi = {
         cmdElem.querySelector('option[value="mknote"]').hidden = true;
         cmdElem.querySelector('option[value="editx"]').hidden = !(isHtml);
         cmdElem.querySelector('option[value="upload"]').hidden = true;
-        cmdElem.querySelector('option[value="move"]').hidden = false;
+        cmdElem.querySelector('option[value="move_up"]').hidden = false;
+        cmdElem.querySelector('option[value="move_down"]').hidden = false;
+        cmdElem.querySelector('option[value="move_into"]').hidden = false;
         cmdElem.querySelector('option[value="copy"]').hidden = false;
         cmdElem.querySelector('option[value="delete"]').hidden = false;
         break;
@@ -501,6 +514,116 @@ const scrapbookUi = {
         if (item) {
           const target = this.book.dataUrl + item.index;
           await this.openLink(target + '?a=editx', true);
+        }
+        break;
+      }
+
+      case 'move_up': {
+        const itemElem = selectedItemElems[0];
+        const itemId = itemElem.getAttribute('data-id');
+
+        const parentItemElem = itemElem.parentNode.parentNode;
+        const parentItemId = parentItemElem.getAttribute('data-id');
+        const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
+        const index = Array.prototype.indexOf.call(siblingItems, itemElem);
+
+        if (index !== -1 && index > 0) {
+          try {
+            [this.book.toc[parentItemId][index - 1], this.book.toc[parentItemId][index]] =
+                [this.book.toc[parentItemId][index], this.book.toc[parentItemId][index - 1]];
+
+            await this.book.saveToc();
+          } catch (ex) {
+            alert(`Unable to save TOC: ${ex.message}`);
+            break;
+          }
+
+          itemElem.parentNode.insertBefore(itemElem, itemElem.previousSibling);
+        }
+        break;
+      }
+
+      case 'move_down': {
+        const itemElem = selectedItemElems[0];
+        const itemId = itemElem.getAttribute('data-id');
+
+        const parentItemElem = itemElem.parentNode.parentNode;
+        const parentItemId = parentItemElem.getAttribute('data-id');
+        const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
+        const index = Array.prototype.indexOf.call(siblingItems, itemElem);
+
+        if (index !== -1 && index < siblingItems.length - 1) {
+          try {
+            [this.book.toc[parentItemId][index], this.book.toc[parentItemId][index + 1]] =
+                [this.book.toc[parentItemId][index + 1], this.book.toc[parentItemId][index]];
+
+            await this.book.saveToc();
+          } catch (ex) {
+            alert(`Unable to save TOC: ${ex.message}`);
+            break;
+          }
+
+          itemElem.parentNode.insertBefore(itemElem.nextSibling, itemElem);
+        }
+        break;
+      }
+
+      case 'move_into': {
+        if (item) {
+          let targetId;
+          {
+            const dialog = document.createElement('form');
+            const label = dialog.appendChild(document.createElement('label'));
+            label.textContent = `Input an ID to move the item into:`;
+            dialog.appendChild(document.createTextNode(' '));
+            const input = dialog.appendChild(document.createElement('input'));
+            input.type = 'text';
+            dialog.appendChild(document.createTextNode(' '));
+            const submit = dialog.appendChild(document.createElement('input'));
+            submit.type = 'submit';
+            submit.value = 'OK';
+            dialog.addEventListener('submit', (event) => {
+              event.preventDefault();
+              dialog.resolve(input.value);
+            });
+            targetId = await this.showDialog(dialog);
+          }
+
+          if (targetId && this.book.meta[targetId]) {
+            const itemElem = selectedItemElems[0];
+            const itemId = itemElem.getAttribute('data-id');
+
+            const parentItemElem = itemElem.parentNode.parentNode;
+            const parentItemId = parentItemElem.getAttribute('data-id');
+            const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
+            const index = Array.prototype.indexOf.call(siblingItems, itemElem);
+
+            if (index !== -1) {
+              try {
+                this.book.toc[parentItemId].splice(index, 1);
+                
+                if (!this.book.toc[targetId]) {
+                  this.book.toc[targetId] = [];
+                }
+                this.book.toc[targetId].push(itemId);
+
+                await this.book.saveToc();
+              } catch (ex) {
+                alert(`Unable to save TOC: ${ex.message}`);
+                break;
+              }
+
+              itemElem.remove();
+              Array.prototype.filter.call(
+                document.getElementById('item-root').querySelectorAll('li[data-id]'),
+                x => x.getAttribute('data-id') === targetId
+              ).forEach((parentElem) => {
+                this.itemMakeContainer(parentElem);
+                if (!parentElem.container.hasChildNodes()) { return; }
+                this.addItem(parentElem, itemId);
+              });
+            }
+          }
         }
         break;
       }
