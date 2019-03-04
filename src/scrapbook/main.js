@@ -334,9 +334,10 @@ const scrapbookUi = {
     switch (selectedItemElems.length) {
       case 0: {
         cmdElem.querySelector('option[value="index"]').hidden = false;
-        cmdElem.querySelector('option[value="source"]').hidden = true;
         cmdElem.querySelector('option[value="exec"]').hidden = false;
         cmdElem.querySelector('option[value="browse"]').hidden = true;
+        cmdElem.querySelector('option[value="source"]').hidden = true;
+        cmdElem.querySelector('option[value="meta"]').hidden = true;
         cmdElem.querySelector('option[value="mkdir"]').hidden = false;
         cmdElem.querySelector('option[value="mksep"]').hidden = false;
         cmdElem.querySelector('option[value="mknote"]').hidden = false;
@@ -350,14 +351,16 @@ const scrapbookUi = {
 
       case 1: {
         const item = this.book.meta[selectedItemElems[0].getAttribute('data-id')];
+        const isHtml = /\.(?:html?|xht(?:ml)?)$/.test(item.index);
         cmdElem.querySelector('option[value="index"]').hidden = true;
-        cmdElem.querySelector('option[value="source"]').hidden = false;
         cmdElem.querySelector('option[value="exec"]').hidden = false;
         cmdElem.querySelector('option[value="browse"]').hidden = false;
+        cmdElem.querySelector('option[value="source"]').hidden = false;
+        cmdElem.querySelector('option[value="meta"]').hidden = false;
         cmdElem.querySelector('option[value="mkdir"]').hidden = true;
         cmdElem.querySelector('option[value="mksep"]').hidden = true;
         cmdElem.querySelector('option[value="mknote"]').hidden = true;
-        cmdElem.querySelector('option[value="editx"]').hidden = !/\.(?:html?|xht(?:ml)?)$/.test(item.index);
+        cmdElem.querySelector('option[value="editx"]').hidden = !(isHtml);
         cmdElem.querySelector('option[value="upload"]').hidden = true;
         cmdElem.querySelector('option[value="move"]').hidden = false;
         cmdElem.querySelector('option[value="copy"]').hidden = false;
@@ -388,14 +391,6 @@ const scrapbookUi = {
     switch (command) {
       case 'index': {
         this.openLink(this.book.indexUrl, true);
-        break;
-      }
-
-      case 'source': {
-        if (item) {
-          const target = item.source;
-          await this.openLink(target, true);
-        }
         break;
       }
 
@@ -438,6 +433,22 @@ const scrapbookUi = {
           } catch (ex) {
             alert(`Unable to browse "${target}": ${ex.message}`);
           }
+        }
+        break;
+      }
+
+      case 'source': {
+        if (item) {
+          const target = item.source;
+          await this.openLink(target, true);
+        }
+        break;
+      }
+
+      case 'meta': {
+        if (item) {
+          const text = JSON.stringify(item, null, 2);
+          alert(text);
         }
         break;
       }
