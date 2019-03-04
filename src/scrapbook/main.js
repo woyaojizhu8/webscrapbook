@@ -15,18 +15,6 @@ const scrapbookUi = {
     meta: {},
   },
 
-  toc: function (data) {
-    for (var id in data) {
-      this.data.toc[id] = data[id];
-    }
-  },
-
-  meta: function (data) {
-    for (var id in data) {
-      this.data.meta[id] = data[id];
-    }
-  },
-
   log(msg) {
     document.getElementById("logger").appendChild(document.createTextNode(msg + '\n'));
   },
@@ -116,7 +104,6 @@ const scrapbookUi = {
         this.addItem(id, rootElem);
       }
     } catch (ex) {
-console.error(ex);
       this.error(`Unable to init tree: ${ex.message}`);
       return;
     }
