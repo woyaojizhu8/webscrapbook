@@ -32,14 +32,24 @@ const scrapbookUi = {
     document.getElementById('toolbar').querySelector('fieldset').disabled = !willEnable;
   },
 
-  showDialog(elem) {
+  async showDialog(elem) {
     const mask = document.getElementById('dialog-mask');
     const wrapper = document.getElementById('dialog-wrapper');
-
     wrapper.innerHTML = '';
     wrapper.appendChild(elem);
 
-    mask.hidden = false;
+    return new Promise((resolve, reject) => {
+      const onClick = (event) => {
+        if (event.target === mask) {
+          mask.removeEventListener('click', onClick);
+          mask.hidden = true;
+          resolve();
+        }
+      };
+
+      mask.addEventListener('click', onClick);
+      mask.hidden = false;
+    });
   },
   
   async init() {
@@ -321,13 +331,6 @@ const scrapbookUi = {
     }
   },
 
-  onDialogClick(event) {
-    const mask = document.getElementById('dialog-mask');
-    if (event.target === mask) {
-      mask.hidden = true;
-    }
-  },
-
   async onBookChange(event) {
     this.enableToolbar(false);
     location.href = '?id=' + encodeURIComponent(event.target.value);
@@ -480,7 +483,7 @@ const scrapbookUi = {
             const td = tr.appendChild(document.createElement('td'));
             td.textContent = value;
           }
-          this.showDialog(dialog);
+          await this.showDialog(dialog);
         }
         break;
       }
@@ -578,8 +581,6 @@ const scrapbookUi = {
 
 document.addEventListener('DOMContentLoaded', async () => {
   scrapbook.loadLanguages(document);
-
-  document.getElementById('dialog-mask').addEventListener('click', scrapbookUi.onDialogClick);
 
   document.getElementById("book").addEventListener('change', scrapbookUi.onBookChange);
 

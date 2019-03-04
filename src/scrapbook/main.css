@@ -14,7 +14,8 @@ body {
 }
 
 #dialog-wrapper {
-  top: 10%;
+  position: relative;
+  top: 5%;
   margin: auto;
   width: 80%;
   max-height: 70%;
