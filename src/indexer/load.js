@@ -416,11 +416,11 @@ const indexer = {
       }
 
       this.serverData.isIndexingServer = true;
-      await server.loadConfig();
+      await server.init();
 
-      for (const bookId in server.config.book) {
+      for (const book of Object.values(server.books)) {
         const loadEntry = async (book, path, type = 'dir') => {
-          const target = book._topUrl + path.split('/').map(x => encodeURIComponent(x)).join('/');
+          const target = book.topUrl + path.split('/').map(x => encodeURIComponent(x)).join('/');
           try {
             if (type === 'dir') {
               const xhr = await scrapbook.xhr({
@@ -451,13 +451,15 @@ const indexer = {
             this.error(`Unable to load "${target}": ${ex.message}`);
           }
         };
-        const book = this.serverData.book = server.getBookInfo(bookId);
+
         const inputData = {
-          name: book.name,
+          name: book.config.name,
           files: [],
         };
 
-        this.log(`Got book '${book.name}' at '${book._topUrl}'.`);
+        this.serverData.book = book;
+
+        this.log(`Got book '${book.config.name}' at '${book.topUrl}'.`);
         this.log(`Inspecting files...`);
         await loadEntry(book, 'data');
         await loadEntry(book, 'tree');
@@ -1758,7 +1760,7 @@ const indexer = {
           inZipPath.split('/').pop(),
           {type: "application/octet-stream"}
         );
-        const target = book._topUrl + inZipPath.split('/').map(x => encodeURIComponent(x)).join('/');
+        const target = book.topUrl + inZipPath.split('/').map(x => encodeURIComponent(x)).join('/');
 
         const formData = new FormData();
         formData.append('token', await server.acquireToken(target));

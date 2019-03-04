@@ -10,11 +10,6 @@ const scrapbookUi = {
   bookId: null,
   book: null,
 
-  data: {
-    toc: {},
-    meta: {},
-  },
-
   log(msg) {
     document.getElementById("logger").appendChild(document.createTextNode(msg + '\n'));
   },
@@ -48,7 +43,7 @@ const scrapbookUi = {
 
     // load server config
     try {
-      await server.loadConfig();
+      await server.init();
     } catch (ex) {
       console.error(ex);
       this.error(`Backend initilization error: ${ex.message}`);
@@ -58,13 +53,13 @@ const scrapbookUi = {
     // load scrapbooks
     try {
       const bookId = this.bookId = new URL(location.href).searchParams.get('id') || '';
-      const book = this.book = server.getBookInfo(bookId);
+      const book = this.book = server.books[bookId];
 
       // init book select
       const wrapper = document.getElementById('book');
-      for (const [name, book] of Object.entries(server.config.book)) {
+      for (const [bookId, book] of Object.entries(server.books)) {
         const opt = document.createElement('option');
-        opt.value = name;
+        opt.value = bookId;
         opt.textContent = book.name;
         wrapper.appendChild(opt);
       }
@@ -77,7 +72,7 @@ const scrapbookUi = {
 
     // load index
     try {
-      this.data.toc = await server.loadToc(this.bookId);
+      await this.book.loadToc();
     } catch (ex) {
       console.error(ex);
       this.error(`Unable to load TOC: ${ex.message}`);
@@ -85,7 +80,7 @@ const scrapbookUi = {
     }
 
     try {
-      this.data.meta = await server.loadMeta(this.bookId);
+      await this.book.loadMeta();
     } catch (ex) {
       console.error(ex);
       this.error(`Unable to load metadata: ${ex.message}`);
@@ -95,12 +90,11 @@ const scrapbookUi = {
     // init tree
     try {
       const rootElem = document.getElementById('item-root');
-
       rootElem.container = document.createElement('ul');
       rootElem.container.className = 'container';
       rootElem.appendChild(rootElem.container);
 
-      for (const id of this.data.toc.root) {
+      for (const id of this.book.toc.root) {
         this.addItem(id, rootElem);
       }
     } catch (ex) {
@@ -110,7 +104,7 @@ const scrapbookUi = {
   },
 
   addItem(id, parent) {
-    const meta = this.data.meta[id];
+    const meta = this.book.meta[id];
     if (!meta) {
       return null;
     }
@@ -129,12 +123,12 @@ const scrapbookUi = {
       var a = document.createElement('a');
       a.appendChild(document.createTextNode(meta.title || id));
       if (meta.type !== 'bookmark') {
-        if (meta.index) { a.href = this.book._dataUrl + scrapbook.escapeFilename(meta.index); }
+        if (meta.index) { a.href = this.book.dataUrl + scrapbook.escapeFilename(meta.index); }
       } else {
         if (meta.source) {
           a.href = meta.source;
         } else {
-          if (meta.index) { a.href = this.book._dataUrl + scrapbook.escapeFilename(meta.index); }
+          if (meta.index) { a.href = this.book.dataUrl + scrapbook.escapeFilename(meta.index); }
         }
       }
       if (meta.comment) { a.title = meta.comment; }
@@ -145,7 +139,7 @@ const scrapbookUi = {
       if (meta.icon) {
         icon.src = /^(?:[a-z][a-z0-9+.-]*:|[/])/i.test(meta.icon || "") ? 
             meta.icon : 
-            (this.book._dataUrl + scrapbook.escapeFilename(meta.index || "")).replace(/[/][^/]+$/, '/') + meta.icon;
+            (this.book.dataUrl + scrapbook.escapeFilename(meta.index || "")).replace(/[/][^/]+$/, '/') + meta.icon;
       } else {
         icon.src = {
           'folder': browser.runtime.getURL('resources/fclose.png'),
@@ -156,7 +150,7 @@ const scrapbookUi = {
       icon.alt = "";
       a.insertBefore(icon, a.firstChild);
 
-      var childIdList = this.data.toc[id];
+      var childIdList = this.book.toc[id];
       if (childIdList && childIdList.length) {
         elem.toggle = document.createElement('a');
         elem.toggle.href = '#';
@@ -196,7 +190,7 @@ const scrapbookUi = {
     if (willOpen && !elem.hasChildNodes())  {
       const itemElem = elem.parentNode;
 
-      for (const id of this.data.toc[itemElem.getAttribute('data-id')]) {
+      for (const id of this.book.toc[itemElem.getAttribute('data-id')]) {
         this.addItem(id, itemElem);
       }
     }
@@ -214,7 +208,7 @@ const scrapbookUi = {
 
   getHighlightElem(itemElem) {
     let elem = itemElem.firstChild.firstChild;
-    if (itemElem.getAttribute('data-type') === "folder") {
+    if (elem.classList.contains('toggle')) {
       elem = elem.nextSibling;
     }
     return elem;
@@ -373,12 +367,12 @@ const scrapbookUi = {
 
     if (selectedItemElems[0]) {
       id = selectedItemElems[0].getAttribute('data-id');
-      item = this.data.meta[id];
+      item = this.book.meta[id];
     }
 
     switch (command) {
       case 'index': {
-        this.openLink(this.book._indexUrl, true);
+        this.openLink(this.book.indexUrl, true);
         break;
       }
 
@@ -392,9 +386,9 @@ const scrapbookUi = {
 
       case 'exec': {
         if (!item) {
-          const target = this.book._topUrl;
+          const target = this.book.topUrl;
           try {
-            const xhr = await scrapbook.xhr({
+            const xhr = await server.request({
               url: target + '?a=exec&f=json',
               responseType: 'json',
               method: "GET",
@@ -403,9 +397,9 @@ const scrapbookUi = {
             alert(`Unable to open "${target}": ${ex.message}`);
           }
         } else {
-          const target = this.book._dataUrl + item.index;
+          const target = this.book.dataUrl + item.index;
           try {
-            const xhr = await scrapbook.xhr({
+            const xhr = await server.request({
               url: target + '?a=exec&f=json',
               responseType: 'json',
               method: "GET",
@@ -419,9 +413,9 @@ const scrapbookUi = {
 
       case 'browse': {
         if (item) {
-          const target = this.book._dataUrl + item.index;
+          const target = this.book.dataUrl + item.index;
           try {
-            const xhr = await scrapbook.xhr({
+            const xhr = await server.request({
               url: target + '?a=browse&f=json',
               responseType: 'json',
               method: "GET",
@@ -435,7 +429,7 @@ const scrapbookUi = {
 
       case 'editx': {
         if (item) {
-          const target = this.book._dataUrl + item.index;
+          const target = this.book.dataUrl + item.index;
           await this.openLink(target + '?a=editx', true);
         }
         break;
@@ -451,13 +445,13 @@ const scrapbookUi = {
           if (index !== -1) {
             // remove from toc
             const parentItemId = parentItemElem.getAttribute('data-id');
-            this.data.toc[parentItemId].splice(index, 1);
+            this.book.toc[parentItemId].splice(index, 1);
 
             // remove from DOM
             siblingItems[index].remove();
 
             // upload revised toc to server
-            await server.saveToc(this.bookId, this.data.toc);
+            await this.book.saveToc();
           }
         }
         break;

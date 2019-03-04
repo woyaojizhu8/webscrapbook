@@ -12,7 +12,7 @@ class Server {
   constructor () {
     this._config = null;
     this._serverRoot = null;
-    this._books = {};
+    this._books = null;
   }
 
   get serverRoot() {
@@ -23,26 +23,8 @@ class Server {
     return this._config;
   }
 
-  getBookInfo(bookId, refresh = false) {
-    if (!this._books[bookId] || refresh) {
-      const book = this._books[bookId] = this.config.book[bookId];
-
-      if (!book) {
-        throw new Error(`unknown scrapbook: ${bookId}`);
-      }
-
-      book._topUrl = this.serverRoot +
-        (book.top_dir ? book.top_dir + '/' : '');
-
-      book._dataUrl = book._topUrl +
-          (book.data_dir ? book.data_dir + '/' : '');
-
-      book._treeUrl = book._topUrl +
-          (book.tree_dir ? book.tree_dir + '/' : '');
-
-      book._indexUrl = book._topUrl + book.index;
-    }
-    return this._books[bookId];
+  get books() {
+    return this._books;
   }
 
   /**
@@ -68,7 +50,7 @@ class Server {
   /**
    * Load the config of the backend server
    */
-  async loadConfig(refresh = false) {
+  async init(refresh = false) {
     if (!this._config || refresh) {
       if (!scrapbook.hasServer()) {
         return null;
@@ -109,8 +91,15 @@ class Server {
         urlObj.pathname = this._config.server.base + '/';
         this._serverRoot = urlObj.href;
       }
+
+      // load books
+      {
+        this._books = {};
+        for (const bookId in server.config.book) {
+          this._books[bookId] = new Book(bookId, this);
+        }
+      }
     }
-    return this._config;
   }
 
   /**
@@ -119,7 +108,7 @@ class Server {
   async acquireToken(url) {
     try {
       const xhr = await this.request({
-        url: url + '?a=token&f=json',
+        url: (url || this._serverRoot) + '?a=token&f=json',
         responseType: 'json',
         method: "GET",
       });
@@ -128,34 +117,61 @@ class Server {
       throw new Error(`Unable to acquire access token: ${ex.message}`);
     }
   }
+}
+
+class Book {
+  constructor(bookId, server) {
+    this.id = bookId;
+    this.config = server.config.book[bookId];
+    this.server = server;
+
+    if (!this.config) {
+      throw new Error(`unknown scrapbook: ${bookId}`);
+    }
+
+    this.topUrl = server.serverRoot +
+      (this.config.top_dir ? this.config.top_dir + '/' : '');
+
+    this.dataUrl = this.topUrl +
+        (this.config.data_dir ? this.config.data_dir + '/' : '');
+
+    this.treeUrl = this.topUrl +
+        (this.config.tree_dir ? this.config.tree_dir + '/' : '');
+
+    this.indexUrl = this.topUrl + this.config.index;
+
+    this.treeFiles = null;
+    this.toc = null;
+    this.meta = null;
+  }
 
   /**
    * @return {Map}
    */
-  async loadTreeFiles(bookId) {
-    const data = (await scrapbook.xhr({
-      url: this.getBookInfo(bookId)._treeUrl + '?a=list&f=json',
+  async loadTreeFiles() {
+    const data = (await this.server.request({
+      url: this.treeUrl + '?a=list&f=json',
       responseType: 'json',
       method: "GET",
     })).response.data;
 
-    return data.reduce((data, item) => {
+    return this.treeFiles = data.reduce((data, item) => {
       data.set(item.name, item);
       return data;
     }, new Map());
   }
 
-  async loadMeta(bookId) {
+  async loadMeta() {
     const objList = [{}];
-    const treeFiles = await this.loadTreeFiles(bookId);
-    const prefix = this.getBookInfo(bookId)._treeUrl;
+    const treeFiles = await this.loadTreeFiles();
+    const prefix = this.treeUrl;
     const suffix = '?ts=' + Date.now(); // bust the cache
     for (let i = 0; ; i++) {
       const file = `meta${i || ""}.js`;
       if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
         const url = prefix + encodeURIComponent(file);
         try {
-          const text = (await this.request({
+          const text = (await this.server.request({
             url: url + suffix,
             responseType: 'text',
             method: "GET",
@@ -173,20 +189,20 @@ class Server {
         break;
       }
     }
-    return Object.assign.apply(this, objList);
+    return this.meta = Object.assign.apply(this, objList);
   }
 
-  async loadToc(bookId) {
+  async loadToc() {
     const objList = [{}];
-    const treeFiles = await this.loadTreeFiles(bookId);
-    const prefix = this.getBookInfo(bookId)._treeUrl;
+    const treeFiles = await this.loadTreeFiles();
+    const prefix = this.treeUrl;
     const suffix = '?ts=' + Date.now(); // bust the cache
     for (let i = 0; ; i++) {
       const file = `toc${i || ""}.js`;
       if (treeFiles.has(file) && treeFiles.get(file).type === 'file') {
         const url = prefix + encodeURIComponent(file);
         try {
-          const text = (await this.request({
+          const text = (await this.server.request({
             url: url + suffix,
             responseType: 'text',
             method: "GET",
@@ -204,34 +220,20 @@ class Server {
         break;
       }
     }
-    return Object.assign.apply(this, objList);
+    return this.toc = Object.assign.apply(this, objList);
   }
 
-  generateMetaFile(jsonData) {
-    return `/**
- * Feel free to edit this file, but keep data code valid JSON format.
- */
-scrapbook.meta(${JSON.stringify(jsonData, null, 2)})`;
-  }
-
-  generateTocFile(jsonData) {
-    return `/**
- * Feel free to edit this file, but keep data code valid JSON format.
- */
-scrapbook.toc(${JSON.stringify(jsonData, null, 2)})`;
-  }
-
-  async saveToc(bookId, theToc) {
+  async saveToc(theToc) {
     const exportFile = async (toc, i) => {
       const content = this.generateTocFile(toc);
       const file = new File([content], `toc${i || ""}.js`, {type: "application/javascript"});
-      const target = this.getBookInfo(bookId)._treeUrl + file.name;
+      const target = this.treeUrl + file.name;
 
       const formData = new FormData();
-      formData.append('token', await this.acquireToken(target));
+      formData.append('token', await this.server.acquireToken());
       formData.append('upload', file);
 
-      await this.request({
+      await this.server.request({
         url: target + '?a=upload&f=json',
         responseType: 'json',
         method: "POST",
@@ -248,8 +250,8 @@ scrapbook.toc(${JSON.stringify(jsonData, null, 2)})`;
     let i = 0;
     let size = 0;
     let toc = {};
-    for (const id in theToc) {
-      toc[id] = theToc[id];
+    for (const id in this.toc) {
+      toc[id] = this.toc[id];
       size += 1 + toc[id].length;
 
       if (size >= sizeThreshold) {
@@ -265,23 +267,37 @@ scrapbook.toc(${JSON.stringify(jsonData, null, 2)})`;
     }
 
     // remove stale toc files
-    const treeFiles = await this.loadTreeFiles(bookId);
+    const treeFiles = await this.loadTreeFiles();
     for (; ; i++) {
       const path = `toc${i}.js`;
       if (!treeFiles.has(path)) { break; }
 
-      const target = this.getBookInfo(bookId)._treeUrl + path;
+      const target = this.treeUrl + path;
 
       const formData = new FormData();
-      formData.append('token', await this.acquireToken(target));
+      formData.append('token', await this.server.acquireToken());
 
-      const xhr = await this.request({
+      const xhr = await this.server.request({
         url: target + '?a=delete&f=json',
         responseType: 'json',
         method: "POST",
         formData: formData,
       });
     }
+  }
+
+  generateMetaFile(jsonData) {
+    return `/**
+ * Feel free to edit this file, but keep data code valid JSON format.
+ */
+scrapbook.meta(${JSON.stringify(jsonData, null, 2)})`;
+  }
+
+  generateTocFile(jsonData) {
+    return `/**
+ * Feel free to edit this file, but keep data code valid JSON format.
+ */
+scrapbook.toc(${JSON.stringify(jsonData, null, 2)})`;
   }
 }
 

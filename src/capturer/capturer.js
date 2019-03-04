@@ -1614,12 +1614,12 @@ capturer.saveToServer = async function (params) {
   isDebug && console.debug("call: saveToServer", params);
 
   const {timeId, blob, directory, filename, sourceUrl, options} = params;
-  const serverConfig = await server.loadConfig();
+  await server.init();
 
   const target = (() => {
     const book = options["capture.scrapbook"] || '';
-    const topDir = serverConfig.book[book].top_dir;
-    const dataDir = serverConfig.book[book].data_dir;
+    const topDir = server.config.book[book].top_dir;
+    const dataDir = server.config.book[book].data_dir;
     const subDir = directory.slice((options["capture.scrapbookFolder"] + "/data/").length);
     return server.serverRoot +
         (topDir ? topDir + '/' : '') +
