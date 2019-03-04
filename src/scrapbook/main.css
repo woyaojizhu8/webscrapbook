@@ -20,7 +20,6 @@ body {
   max-height: 70%;
   padding: 12px;
   background-color: #fcfcfc;
-  word-break: break-all;
   overflow: auto;
 }
 

@@ -464,8 +464,23 @@ const scrapbookUi = {
 
       case 'meta': {
         if (item) {
-          const text = JSON.stringify(item, null, 2);
-          this.showDialog(document.createTextNode(text));
+          const dialog = document.createElement('div');
+          const table = dialog.appendChild(document.createElement('table'));
+          {
+            const tr = table.appendChild(document.createElement('tr'));
+            const th = tr.appendChild(document.createElement('th'));
+            th.textContent = 'ID';
+            const td = tr.appendChild(document.createElement('td'));
+            td.textContent = id;
+          }
+          for (const [attr, value] of Object.entries(item)) {
+            const tr = table.appendChild(document.createElement('tr'));
+            const th = tr.appendChild(document.createElement('th'));
+            th.textContent = attr;
+            const td = tr.appendChild(document.createElement('td'));
+            td.textContent = value;
+          }
+          this.showDialog(dialog);
         }
         break;
       }
