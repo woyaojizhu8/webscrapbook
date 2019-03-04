@@ -524,7 +524,7 @@ const scrapbookUi = {
 
         const parentItemElem = itemElem.parentNode.parentNode;
         const parentItemId = parentItemElem.getAttribute('data-id');
-        const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
+        const siblingItems = parentItemElem.container.querySelectorAll('li');
         const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
         if (index !== -1 && index > 0) {
@@ -538,7 +538,14 @@ const scrapbookUi = {
             break;
           }
 
-          itemElem.parentNode.insertBefore(itemElem, itemElem.previousSibling);
+          Array.prototype.filter.call(
+            document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
+            x => x.getAttribute('data-id') === parentItemId
+          ).forEach((parentElem) => {
+            if (!(parentElem.container && parentElem.container.hasChildNodes())) { return; }
+            const itemElem = parentElem.container.querySelectorAll('li')[index];
+            itemElem.parentNode.insertBefore(itemElem, itemElem.previousSibling);
+          });
         }
         break;
       }
@@ -549,7 +556,7 @@ const scrapbookUi = {
 
         const parentItemElem = itemElem.parentNode.parentNode;
         const parentItemId = parentItemElem.getAttribute('data-id');
-        const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
+        const siblingItems = parentItemElem.container.querySelectorAll('li');
         const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
         if (index !== -1 && index < siblingItems.length - 1) {
@@ -563,7 +570,14 @@ const scrapbookUi = {
             break;
           }
 
-          itemElem.parentNode.insertBefore(itemElem.nextSibling, itemElem);
+          Array.prototype.filter.call(
+            document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
+            x => x.getAttribute('data-id') === parentItemId
+          ).forEach((parentElem) => {
+            if (!(parentElem.container && parentElem.container.hasChildNodes())) { return; }
+            const itemElem = parentElem.container.querySelectorAll('li')[index];
+            itemElem.parentNode.insertBefore(itemElem, itemElem.nextSibling.nextSibling);
+          });
         }
         break;
       }
@@ -589,13 +603,13 @@ const scrapbookUi = {
             targetId = await this.showDialog(dialog);
           }
 
-          if (targetId && this.book.meta[targetId]) {
+          if (targetId && (this.book.meta[targetId] || targetId === 'root')) {
             const itemElem = selectedItemElems[0];
             const itemId = itemElem.getAttribute('data-id');
 
             const parentItemElem = itemElem.parentNode.parentNode;
             const parentItemId = parentItemElem.getAttribute('data-id');
-            const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
+            const siblingItems = parentItemElem.container.querySelectorAll('li');
             const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
             if (index !== -1) {
@@ -613,14 +627,22 @@ const scrapbookUi = {
                 break;
               }
 
-              itemElem.remove();
               Array.prototype.filter.call(
-                document.getElementById('item-root').querySelectorAll('li[data-id]'),
+                document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
+                x => x.getAttribute('data-id') === parentItemId
+              ).forEach((parentElem) => {
+                if (!(parentElem.container && parentElem.container.hasChildNodes())) { return; }
+                const itemElem = parentElem.container.querySelectorAll('li')[index];
+                itemElem.remove();
+              });
+
+              Array.prototype.filter.call(
+                document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
                 x => x.getAttribute('data-id') === targetId
               ).forEach((parentElem) => {
                 this.itemMakeContainer(parentElem);
                 if (!parentElem.container.hasChildNodes()) { return; }
-                this.addItem(parentElem, itemId);
+                this.addItem(itemId, parentElem);
               });
             }
           }
@@ -634,7 +656,8 @@ const scrapbookUi = {
           const itemId = itemElem.getAttribute('data-id');
 
           const parentItemElem = itemElem.parentNode.parentNode;
-          const siblingItems = parentItemElem.querySelector('ul').querySelectorAll('li');
+          const parentItemId = parentItemElem.getAttribute('data-id');
+          const siblingItems = parentItemElem.container.querySelectorAll('li');
           const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
           if (index !== -1) {
@@ -683,7 +706,14 @@ const scrapbookUi = {
             }
 
             // remove from DOM
-            siblingItems[index].remove();
+            Array.prototype.filter.call(
+              document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
+              x => x.getAttribute('data-id') === parentItemId
+            ).forEach((parentElem) => {
+              if (!(parentElem.container && parentElem.container.hasChildNodes())) { return; }
+              const itemElem = parentElem.container.querySelectorAll('li')[index];
+              itemElem.remove();
+            });
           }
         }
         break;
