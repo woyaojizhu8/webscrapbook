@@ -316,10 +316,14 @@ const scrapbookUi = {
   },
 
   async onCommandFocus(event) {
-    const selectedItems = document.querySelectorAll('#item-root .highlight');
     const cmdElem = document.getElementById('command');
 
-    switch (selectedItems.length) {
+    const selectedItemElems = Array.prototype.map.call(
+      document.querySelectorAll('#item-root .highlight'),
+      x => x.parentNode.parentNode
+    );
+
+    switch (selectedItemElems.length) {
       case 0: {
         cmdElem.querySelector('option[value="index"]').hidden = false;
         cmdElem.querySelector('option[value="source"]').hidden = true;
@@ -337,6 +341,7 @@ const scrapbookUi = {
       }
 
       case 1: {
+        const item = this.book.meta[selectedItemElems[0].getAttribute('data-id')];
         cmdElem.querySelector('option[value="index"]').hidden = true;
         cmdElem.querySelector('option[value="source"]').hidden = false;
         cmdElem.querySelector('option[value="exec"]').hidden = false;
@@ -344,7 +349,7 @@ const scrapbookUi = {
         cmdElem.querySelector('option[value="mkdir"]').hidden = true;
         cmdElem.querySelector('option[value="mksep"]').hidden = true;
         cmdElem.querySelector('option[value="mknote"]').hidden = true;
-        cmdElem.querySelector('option[value="editx"]').hidden = false;
+        cmdElem.querySelector('option[value="editx"]').hidden = !/\.(?:html?|xht(?:ml)?)$/.test(item.index);
         cmdElem.querySelector('option[value="upload"]').hidden = true;
         cmdElem.querySelector('option[value="move"]').hidden = false;
         cmdElem.querySelector('option[value="copy"]').hidden = false;
@@ -523,7 +528,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById("btn-refresh").addEventListener('click', scrapbookUi.onRefresh);
 
-  document.getElementById("command").addEventListener('focus', scrapbookUi.onCommandFocus);
+  document.getElementById("command").addEventListener('focus', scrapbookUi.onCommandFocus.bind(scrapbookUi));
 
   document.getElementById("command").addEventListener('change', scrapbookUi.onCommandChange.bind(scrapbookUi));
 
