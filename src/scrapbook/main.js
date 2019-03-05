@@ -34,7 +34,7 @@ const scrapbookUi = {
 
   /**
    * @param {HTMLElement} elem - the element to be inserted to the dialog.
-   *     A 'resolve' attribute will be bind to elem, which can be call to close the dialog.
+   *     Dispatch a 'dialogClick' event on elem also resolves the Promise.
    */
   async showDialog(elem) {
     const mask = document.getElementById('dialog-mask');
@@ -44,7 +44,7 @@ const scrapbookUi = {
 
     const onClick = (event) => {
       if (event.target === mask) {
-        elem.resolve();
+        elem.dispatchEvent(new Event('dialogClick'));
       }
     };
 
@@ -52,7 +52,9 @@ const scrapbookUi = {
     mask.hidden = false;
 
     const result = await new Promise((resolve, reject) => {
-      elem.resolve = resolve;
+      elem.addEventListener('dialogClick', (event) => {
+       resolve(event.detail); 
+      });
     });
 
     mask.removeEventListener('click', onClick);
@@ -616,7 +618,7 @@ const scrapbookUi = {
             submit.value = 'OK';
             dialog.addEventListener('submit', (event) => {
               event.preventDefault();
-              dialog.resolve(input.value);
+              dialog.dispatchEvent(new CustomEvent('dialogClick', {detail: input.value}));
             });
             targetId = await this.showDialog(dialog);
           }
