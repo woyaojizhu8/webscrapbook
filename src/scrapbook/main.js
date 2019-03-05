@@ -236,7 +236,7 @@ const scrapbookUi = {
     return elem;
   },
 
-  toggleElem(elem, willOpen) {
+  toggleItem(elem, willOpen) {
     const container = elem.container;
     if (!container) { return; }
 
@@ -305,7 +305,7 @@ const scrapbookUi = {
     event.preventDefault();
     const itemElem = event.currentTarget.parentNode.parentNode;
     this.highlightItem(itemElem);
-    this.toggleElem(itemElem);
+    this.toggleItem(itemElem);
   },
 
   async openLink(url, newTab) {
