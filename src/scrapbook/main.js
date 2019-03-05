@@ -621,6 +621,66 @@ const scrapbookUi = {
         break;
       }
 
+      case 'mksep': {
+        let parentItemId = 'root';
+        let index = Infinity;
+        if (item) {
+          const itemElem = selectedItemElems[0];
+          const itemId = itemElem.getAttribute('data-id');
+
+          const parentItemElem = itemElem.parentNode.parentNode;
+          parentItemId = parentItemElem.getAttribute('data-id');
+          const siblingItems = parentItemElem.container.querySelectorAll('li');
+          index = Array.prototype.indexOf.call(siblingItems, itemElem);
+        }
+
+        const newItemId = this.itemMakeNewId();
+        const newItem = {
+          "title": "",
+          "type": "separator",
+          "create": newItemId,
+        };
+
+        // add to meta
+        try {
+          this.book.meta[newItemId] = newItem;
+          await this.book.saveMeta();
+        } catch (ex) {
+          console.error(ex);
+          alert(`Unable to save meta: ${ex.message}`);
+          break;
+        }
+
+        // add to TOC
+        try {
+          if (!this.book.toc[parentItemId]) {
+            this.book.toc[parentItemId] = [];
+          }
+          this.book.toc[parentItemId].splice(index + 1, 0, newItemId);
+          await this.book.saveToc();
+        } catch (ex) {
+          alert(`Unable to save TOC: ${ex.message}`);
+          break;
+        }
+
+        // update DOM
+        Array.prototype.filter.call(
+          document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
+          x => x.getAttribute('data-id') === parentItemId
+        ).forEach((parentElem) => {
+          if (!(parentElem.parentNode)) { return; }
+          this.itemMakeContainer(parentElem);
+          if (!parentElem.container.hasAttribute('data-loaded')) { return; }
+
+          const newItemElem = this.addItem(newItemId, parentElem);
+          if (isFinite(index)) {
+            const refElem = parentElem.container.querySelectorAll('li[data-id]')[index];
+            refElem.parentNode.insertBefore(newItemElem, refElem.nextSibling);
+          }
+        });
+        break;
+      }
+
       case 'editx': {
         if (!item) { break; }
 
