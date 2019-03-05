@@ -489,49 +489,49 @@ const scrapbookUi = {
       }
 
       case 'browse': {
-        if (item) {
-          const target = this.book.dataUrl + item.index;
-          try {
-            const xhr = await server.request({
-              url: target + '?a=browse&f=json',
-              responseType: 'json',
-              method: "GET",
-            });
-          } catch (ex) {
-            alert(`Unable to browse "${target}": ${ex.message}`);
-          }
+        if (!item) { break; }
+
+        const target = this.book.dataUrl + item.index;
+        try {
+          const xhr = await server.request({
+            url: target + '?a=browse&f=json',
+            responseType: 'json',
+            method: "GET",
+          });
+        } catch (ex) {
+          alert(`Unable to browse "${target}": ${ex.message}`);
         }
         break;
       }
 
       case 'source': {
-        if (item) {
-          const target = item.source;
-          await this.openLink(target, true);
-        }
+        if (!item) { break; }
+
+        const target = item.source;
+        await this.openLink(target, true);
         break;
       }
 
       case 'meta': {
-        if (item) {
-          const dialog = document.createElement('div');
-          const table = dialog.appendChild(document.createElement('table'));
-          {
-            const tr = table.appendChild(document.createElement('tr'));
-            const th = tr.appendChild(document.createElement('th'));
-            th.textContent = 'ID';
-            const td = tr.appendChild(document.createElement('td'));
-            td.textContent = id;
-          }
-          for (const [attr, value] of Object.entries(item)) {
-            const tr = table.appendChild(document.createElement('tr'));
-            const th = tr.appendChild(document.createElement('th'));
-            th.textContent = attr;
-            const td = tr.appendChild(document.createElement('td'));
-            td.textContent = value;
-          }
-          await this.showDialog(dialog);
+        if (!item) { break; }
+
+        const dialog = document.createElement('div');
+        const table = dialog.appendChild(document.createElement('table'));
+        {
+          const tr = table.appendChild(document.createElement('tr'));
+          const th = tr.appendChild(document.createElement('th'));
+          th.textContent = 'ID';
+          const td = tr.appendChild(document.createElement('td'));
+          td.textContent = id;
         }
+        for (const [attr, value] of Object.entries(item)) {
+          const tr = table.appendChild(document.createElement('tr'));
+          const th = tr.appendChild(document.createElement('th'));
+          th.textContent = attr;
+          const td = tr.appendChild(document.createElement('td'));
+          td.textContent = value;
+        }
+        await this.showDialog(dialog);
         break;
       }
 
@@ -622,14 +622,16 @@ const scrapbookUi = {
       }
 
       case 'editx': {
-        if (item) {
-          const target = this.book.dataUrl + item.index;
-          await this.openLink(target + '?a=editx', true);
-        }
+        if (!item) { break; }
+
+        const target = this.book.dataUrl + item.index;
+        await this.openLink(target + '?a=editx', true);
         break;
       }
 
       case 'move_up': {
+        if (!item) { break; }
+
         const itemElem = selectedItemElems[0];
         const itemId = itemElem.getAttribute('data-id');
 
@@ -664,6 +666,8 @@ const scrapbookUi = {
       }
 
       case 'move_down': {
+        if (!item) { break; }
+
         const itemElem = selectedItemElems[0];
         const itemId = itemElem.getAttribute('data-id');
 
@@ -698,86 +702,32 @@ const scrapbookUi = {
       }
 
       case 'move_into': {
-        if (item) {
-          let targetId;
-          {
-            const dialog = document.createElement('form');
-            const label = dialog.appendChild(document.createElement('label'));
-            label.textContent = `Input an ID to move the item into:`;
-            dialog.appendChild(document.createTextNode(' '));
-            const input = dialog.appendChild(document.createElement('input'));
-            input.type = 'text';
-            dialog.appendChild(document.createTextNode(' '));
-            const submit = dialog.appendChild(document.createElement('input'));
-            submit.type = 'submit';
-            submit.value = 'OK';
-            dialog.addEventListener('submit', (event) => {
-              event.preventDefault();
-              dialog.dispatchEvent(new CustomEvent('dialogClick', {detail: input.value}));
-            });
-            dialog.addEventListener('dialogShow', (event) => {
-              event.preventDefault();
-              input.focus();
-            });
-            targetId = await this.showDialog(dialog);
-          }
+        if (!item) { break; }
 
-          if (targetId && (this.book.meta[targetId] || targetId === 'root')) {
-            const itemElem = selectedItemElems[0];
-            const itemId = itemElem.getAttribute('data-id');
-
-            const parentItemElem = itemElem.parentNode.parentNode;
-            const parentItemId = parentItemElem.getAttribute('data-id');
-            const siblingItems = parentItemElem.container.querySelectorAll('li');
-            const index = Array.prototype.indexOf.call(siblingItems, itemElem);
-
-            if (index !== -1) {
-              // add to TOC
-              try {
-                this.book.toc[parentItemId].splice(index, 1);
-                if (!this.book.toc[parentItemId].length) {
-                  delete this.book.toc[parentItemId];
-                }
-                
-                if (!this.book.toc[targetId]) {
-                  this.book.toc[targetId] = [];
-                }
-                this.book.toc[targetId].push(itemId);
-
-                await this.book.saveToc();
-              } catch (ex) {
-                alert(`Unable to save TOC: ${ex.message}`);
-                break;
-              }
-
-              // update DOM
-              Array.prototype.filter.call(
-                document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
-                x => x.getAttribute('data-id') === parentItemId
-              ).forEach((parentElem) => {
-                if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
-                const itemElem = parentElem.container.querySelectorAll('li')[index];
-                itemElem.remove();
-                this.itemReduceContainer(parentElem);
-              });
-
-              Array.prototype.filter.call(
-                document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
-                x => x.getAttribute('data-id') === targetId
-              ).forEach((parentElem) => {
-                if (!(parentElem.parentNode)) { return; }
-                this.itemMakeContainer(parentElem);
-                if (!parentElem.container.hasAttribute('data-loaded')) { return; }
-                this.addItem(itemId, parentElem);
-              });
-            }
-          }
+        let targetId;
+        {
+          const dialog = document.createElement('form');
+          const label = dialog.appendChild(document.createElement('label'));
+          label.textContent = `Input an ID to move the item into:`;
+          dialog.appendChild(document.createTextNode(' '));
+          const input = dialog.appendChild(document.createElement('input'));
+          input.type = 'text';
+          dialog.appendChild(document.createTextNode(' '));
+          const submit = dialog.appendChild(document.createElement('input'));
+          submit.type = 'submit';
+          submit.value = 'OK';
+          dialog.addEventListener('submit', (event) => {
+            event.preventDefault();
+            dialog.dispatchEvent(new CustomEvent('dialogClick', {detail: input.value}));
+          });
+          dialog.addEventListener('dialogShow', (event) => {
+            event.preventDefault();
+            input.focus();
+          });
+          targetId = await this.showDialog(dialog);
         }
-        break;
-      }
 
-      case 'delete': {
-        if (item) {
+        if (targetId && (this.book.meta[targetId] || targetId === 'root')) {
           const itemElem = selectedItemElems[0];
           const itemId = itemElem.getAttribute('data-id');
 
@@ -787,57 +737,22 @@ const scrapbookUi = {
           const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
           if (index !== -1) {
-            // remove from TOC
+            // add to TOC
             try {
               this.book.toc[parentItemId].splice(index, 1);
               if (!this.book.toc[parentItemId].length) {
                 delete this.book.toc[parentItemId];
               }
-              delete this.book.toc[itemId];
+              
+              if (!this.book.toc[targetId]) {
+                this.book.toc[targetId] = [];
+              }
+              this.book.toc[targetId].push(itemId);
 
               await this.book.saveToc();
             } catch (ex) {
-              alert(`Unable to delete toc of '${itemId}': ${ex.message}`);
+              alert(`Unable to save TOC: ${ex.message}`);
               break;
-            }
-
-            // remove data and meta if no longer referred in the TOC
-            {
-              let referred = false;
-              for (const subToc of Object.values(this.book.toc)) {
-                if (subToc.indexOf(itemId) !== -1) {
-                  referred = true;
-                  break;
-                }
-              }
-
-              if (!referred) {
-                try {
-                  const index = this.book.meta[itemId].index.replace(/\/index.html$/, '');
-                  const target = this.book.dataUrl + scrapbook.escapeFilename(index);
-
-                  const formData = new FormData();
-                  formData.append('token', await server.acquireToken());
-
-                  await server.request({
-                    url: target + '?a=delete&f=json',
-                    responseType: 'json',
-                    method: "POST",
-                    formData: formData,
-                  });
-                } catch (ex) {
-                  alert(`Unable to delete data of '${itemId}': ${ex.message}`);
-                  break;
-                }
-
-                try {
-                  delete this.book.meta[itemId];
-                  await this.book.saveMeta();
-                } catch (ex) {
-                  alert(`Unable to delete metadata of '${itemId}': ${ex.message}`);
-                  break;
-                }
-              }
             }
 
             // update DOM
@@ -850,7 +765,96 @@ const scrapbookUi = {
               itemElem.remove();
               this.itemReduceContainer(parentElem);
             });
+
+            Array.prototype.filter.call(
+              document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
+              x => x.getAttribute('data-id') === targetId
+            ).forEach((parentElem) => {
+              if (!(parentElem.parentNode)) { return; }
+              this.itemMakeContainer(parentElem);
+              if (!parentElem.container.hasAttribute('data-loaded')) { return; }
+              this.addItem(itemId, parentElem);
+            });
           }
+        }
+        break;
+      }
+
+      case 'delete': {
+        if (!item) { break; }
+
+        const itemElem = selectedItemElems[0];
+        const itemId = itemElem.getAttribute('data-id');
+
+        const parentItemElem = itemElem.parentNode.parentNode;
+        const parentItemId = parentItemElem.getAttribute('data-id');
+        const siblingItems = parentItemElem.container.querySelectorAll('li');
+        const index = Array.prototype.indexOf.call(siblingItems, itemElem);
+
+        if (index !== -1) {
+          // remove from TOC
+          try {
+            this.book.toc[parentItemId].splice(index, 1);
+            if (!this.book.toc[parentItemId].length) {
+              delete this.book.toc[parentItemId];
+            }
+            delete this.book.toc[itemId];
+
+            await this.book.saveToc();
+          } catch (ex) {
+            alert(`Unable to delete toc of '${itemId}': ${ex.message}`);
+            break;
+          }
+
+          // remove data and meta if no longer referred in the TOC
+          {
+            let referred = false;
+            for (const subToc of Object.values(this.book.toc)) {
+              if (subToc.indexOf(itemId) !== -1) {
+                referred = true;
+                break;
+              }
+            }
+
+            if (!referred) {
+              try {
+                const index = this.book.meta[itemId].index.replace(/\/index.html$/, '');
+                const target = this.book.dataUrl + scrapbook.escapeFilename(index);
+
+                const formData = new FormData();
+                formData.append('token', await server.acquireToken());
+
+                await server.request({
+                  url: target + '?a=delete&f=json',
+                  responseType: 'json',
+                  method: "POST",
+                  formData: formData,
+                });
+              } catch (ex) {
+                alert(`Unable to delete data of '${itemId}': ${ex.message}`);
+                break;
+              }
+
+              try {
+                delete this.book.meta[itemId];
+                await this.book.saveMeta();
+              } catch (ex) {
+                alert(`Unable to delete metadata of '${itemId}': ${ex.message}`);
+                break;
+              }
+            }
+          }
+
+          // update DOM
+          Array.prototype.filter.call(
+            document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
+            x => x.getAttribute('data-id') === parentItemId
+          ).forEach((parentElem) => {
+            if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
+            const itemElem = parentElem.container.querySelectorAll('li')[index];
+            itemElem.remove();
+            this.itemReduceContainer(parentElem);
+          });
         }
         break;
       }
