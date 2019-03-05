@@ -381,6 +381,7 @@ const scrapbookUi = {
 
   async onCommandFocus(event) {
     const cmdElem = document.getElementById('command');
+    const isLocalAccess = ['localhost', '127.0.0.1'].includes(new URL(server.serverRoot).hostname);
 
     const selectedItemElems = Array.prototype.map.call(
       document.querySelectorAll('#item-root .highlight'),
@@ -390,7 +391,7 @@ const scrapbookUi = {
     switch (selectedItemElems.length) {
       case 0: {
         cmdElem.querySelector('option[value="index"]').hidden = false;
-        cmdElem.querySelector('option[value="exec"]').hidden = false;
+        cmdElem.querySelector('option[value="exec"]').hidden = !(isLocalAccess);
         cmdElem.querySelector('option[value="browse"]').hidden = true;
         cmdElem.querySelector('option[value="source"]').hidden = true;
         cmdElem.querySelector('option[value="meta"]').hidden = true;
@@ -410,8 +411,8 @@ const scrapbookUi = {
         const item = this.book.meta[selectedItemElems[0].getAttribute('data-id')];
         const isHtml = /\.(?:html?|xht(?:ml)?)$/.test(item.index);
         cmdElem.querySelector('option[value="index"]').hidden = true;
-        cmdElem.querySelector('option[value="exec"]').hidden = false;
-        cmdElem.querySelector('option[value="browse"]').hidden = false;
+        cmdElem.querySelector('option[value="exec"]').hidden = !(isLocalAccess);
+        cmdElem.querySelector('option[value="browse"]').hidden = !(isLocalAccess);
         cmdElem.querySelector('option[value="source"]').hidden = false;
         cmdElem.querySelector('option[value="meta"]').hidden = false;
         cmdElem.querySelector('option[value="mkdir"]').hidden = true;
