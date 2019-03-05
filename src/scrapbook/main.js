@@ -237,28 +237,27 @@ const scrapbookUi = {
     return elem;
   },
 
-  /**
-   * @param {HTMLElement} elem - the container element
-   */
   toggleElem(elem, willOpen) {
+    const container = elem.container;
+    if (!container) { return; }
+
     if (typeof willOpen === "undefined") {
-      willOpen = !!elem.hidden;
+      willOpen = !!container.hidden;
     }
 
     // load child nodes if not loaded yet
-    if (willOpen && !elem.hasAttribute('data-loaded'))  {
-      const itemElem = elem.parentNode;
-      for (const id of this.book.toc[itemElem.getAttribute('data-id')]) {
-        this.addItem(id, itemElem);
+    if (willOpen && !container.hasAttribute('data-loaded'))  {
+      for (const id of this.book.toc[elem.getAttribute('data-id')]) {
+        this.addItem(id, elem);
       }
-      elem.setAttribute('data-loaded', '');
+      container.setAttribute('data-loaded', '');
     }
 
-    elem.hidden = !willOpen;
+    container.hidden = !willOpen;
 
-    // if the elem is the container of root item, previousSibling is undefined
-    if (elem.previousSibling) {
-      elem.previousSibling.firstChild.firstChild.src = willOpen ?
+    // root item container's previousSibling is undefined
+    if (container.previousSibling) {
+      container.previousSibling.firstChild.firstChild.src = willOpen ?
       browser.runtime.getURL('resources/expand.png') :
       browser.runtime.getURL('resources/collapse.png');
     }
@@ -307,7 +306,7 @@ const scrapbookUi = {
     event.preventDefault();
     const itemElem = event.currentTarget.parentNode.parentNode;
     this.highlightItem(itemElem);
-    this.toggleElem(event.currentTarget.parentNode.nextSibling);
+    this.toggleElem(itemElem);
   },
 
   async openLink(url, newTab) {
