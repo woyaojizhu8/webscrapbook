@@ -678,8 +678,8 @@ const scrapbookUi = {
 
           if (index !== -1) {
             // remove from toc
-            const parentItemId = parentItemElem.getAttribute('data-id');
             this.book.toc[parentItemId].splice(index, 1);
+            delete this.book.toc[itemId];
 
             // upload revised toc to server
             try {
@@ -689,35 +689,42 @@ const scrapbookUi = {
               break;
             }
 
-            // remove data and meta if no longer referred in the DOM
-            if (!Array.prototype.some.call(
-                  document.getElementById('item-root').querySelectorAll('li[data-id]'),
-                  x => x.getAttribute('data-id') === itemId && x !== itemElem
-                )) {
-              try {
-                const index = this.book.meta[itemId].index.replace(/\/index.html$/, '');
-                const target = this.book.dataUrl + scrapbook.escapeFilename(index);
-
-                const formData = new FormData();
-                formData.append('token', await server.acquireToken());
-
-                await server.request({
-                  url: target + '?a=delete&f=json',
-                  responseType: 'json',
-                  method: "POST",
-                  formData: formData,
-                });
-              } catch (ex) {
-                alert(`Unable to delete data of '${itemId}': ${ex.message}`);
-                break;
+            // remove data and meta if no longer referred in the TOC
+            {
+              let referred = false;
+              for (const subToc of Object.values(this.book.toc)) {
+                if (subToc.indexOf(itemId) !== -1) {
+                  referred = true;
+                  break;
+                }
               }
 
-              try {
-                delete this.book.meta[itemId];
-                await this.book.saveMeta();
-              } catch (ex) {
-                alert(`Unable to delete metadata of '${itemId}': ${ex.message}`);
-                break;
+              if (!referred) {
+                try {
+                  const index = this.book.meta[itemId].index.replace(/\/index.html$/, '');
+                  const target = this.book.dataUrl + scrapbook.escapeFilename(index);
+
+                  const formData = new FormData();
+                  formData.append('token', await server.acquireToken());
+
+                  await server.request({
+                    url: target + '?a=delete&f=json',
+                    responseType: 'json',
+                    method: "POST",
+                    formData: formData,
+                  });
+                } catch (ex) {
+                  alert(`Unable to delete data of '${itemId}': ${ex.message}`);
+                  break;
+                }
+
+                try {
+                  delete this.book.meta[itemId];
+                  await this.book.saveMeta();
+                } catch (ex) {
+                  alert(`Unable to delete metadata of '${itemId}': ${ex.message}`);
+                  break;
+                }
               }
             }
 
