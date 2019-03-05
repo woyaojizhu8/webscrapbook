@@ -63,14 +63,18 @@ body {
 }
 
 /* tree */
-#item-root {
+#items {
   flex: 1 1 auto;
   overflow: auto;
-  padding: 0;
-  padding-__MSG_@@bidi_start_edge__: 1.65em;
+  position: relative;
   font-size: 12px;
   line-height: 1.35em;
   font-family: sans-serif;
+}
+
+#item-root {
+  padding: 0;
+  padding-__MSG_@@bidi_start_edge__: 1.65em;
 }
 
 #item-root ul {

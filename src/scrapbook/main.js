@@ -559,7 +559,7 @@ const scrapbookUi = {
 
           // update DOM
           Array.prototype.filter.call(
-            document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
+            document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
             x => x.getAttribute('data-id') === parentItemId
           ).forEach((parentElem) => {
             if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
@@ -593,7 +593,7 @@ const scrapbookUi = {
 
           // update DOM
           Array.prototype.filter.call(
-            document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
+            document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
             x => x.getAttribute('data-id') === parentItemId
           ).forEach((parentElem) => {
             if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
@@ -659,7 +659,7 @@ const scrapbookUi = {
 
               // update DOM
               Array.prototype.filter.call(
-                document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
+                document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
                 x => x.getAttribute('data-id') === parentItemId
               ).forEach((parentElem) => {
                 if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
@@ -669,7 +669,7 @@ const scrapbookUi = {
               });
 
               Array.prototype.filter.call(
-                document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
+                document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
                 x => x.getAttribute('data-id') === targetId
               ).forEach((parentElem) => {
                 if (!(parentElem.parentNode)) { return; }
@@ -749,7 +749,7 @@ const scrapbookUi = {
 
             // update DOM
             Array.prototype.filter.call(
-              document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
+              document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
               x => x.getAttribute('data-id') === parentItemId
             ).forEach((parentElem) => {
               if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
