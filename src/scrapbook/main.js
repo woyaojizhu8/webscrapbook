@@ -423,9 +423,9 @@ const scrapbookUi = {
         cmdElem.querySelector('option[value="browse"]').hidden = !(isLocalAccess);
         cmdElem.querySelector('option[value="source"]').hidden = !(item.source);
         cmdElem.querySelector('option[value="meta"]').hidden = false;
-        cmdElem.querySelector('option[value="mkfolder"]').hidden = true;
-        cmdElem.querySelector('option[value="mksep"]').hidden = true;
-        cmdElem.querySelector('option[value="mknote"]').hidden = true;
+        cmdElem.querySelector('option[value="mkfolder"]').hidden = false;
+        cmdElem.querySelector('option[value="mksep"]').hidden = false;
+        cmdElem.querySelector('option[value="mknote"]').hidden = false;
         cmdElem.querySelector('option[value="editx"]').hidden = !(isHtml);
         cmdElem.querySelector('option[value="upload"]').hidden = true;
         cmdElem.querySelector('option[value="move_up"]').hidden = false;
@@ -560,45 +560,64 @@ const scrapbookUi = {
           name = await this.showDialog(dialog);
         }
 
-        if (name) {
-          const itemId = this.itemMakeNewId();
-          const item = {
-            "title": name,
-            "type": "folder",
-            "create": itemId,
-          };
+        if (!name) { break; }
 
-          // add to meta
-          try {
-            this.book.meta[itemId] = item;
+        let parentItemId = 'root';
+        let index = Infinity;
+        if (item) {
+          const itemElem = selectedItemElems[0];
+          const itemId = itemElem.getAttribute('data-id');
 
-            await this.book.saveMeta();
-          } catch (ex) {
-            alert(`Unable to save meta: ${ex.message}`);
-            break;
-          }
-
-          // add to TOC
-          try {
-            this.book.toc['root'].push(itemId);
-
-            await this.book.saveToc();
-          } catch (ex) {
-            alert(`Unable to save TOC: ${ex.message}`);
-            break;
-          }
-
-          // update DOM
-          Array.prototype.filter.call(
-            document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
-            x => x.getAttribute('data-id') === 'root'
-          ).forEach((parentElem) => {
-            if (!(parentElem.parentNode)) { return; }
-            this.itemMakeContainer(parentElem);
-            if (!parentElem.container.hasAttribute('data-loaded')) { return; }
-            this.addItem(itemId, parentElem);
-          });
+          const parentItemElem = itemElem.parentNode.parentNode;
+          parentItemId = parentItemElem.getAttribute('data-id');
+          const siblingItems = parentItemElem.container.querySelectorAll('li');
+          index = Array.prototype.indexOf.call(siblingItems, itemElem);
         }
+
+        const newItemId = this.itemMakeNewId();
+        const newItem = {
+          "title": name,
+          "type": "folder",
+          "create": newItemId,
+        };
+
+        // add to meta
+        try {
+          this.book.meta[newItemId] = newItem;
+          await this.book.saveMeta();
+        } catch (ex) {
+          console.error(ex);
+          alert(`Unable to save meta: ${ex.message}`);
+          break;
+        }
+
+        // add to TOC
+        try {
+          if (!this.book.toc[parentItemId]) {
+            this.book.toc[parentItemId] = [];
+          }
+          this.book.toc[parentItemId].splice(index + 1, 0, newItemId);
+          await this.book.saveToc();
+        } catch (ex) {
+          alert(`Unable to save TOC: ${ex.message}`);
+          break;
+        }
+
+        // update DOM
+        Array.prototype.filter.call(
+          document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
+          x => x.getAttribute('data-id') === parentItemId
+        ).forEach((parentElem) => {
+          if (!(parentElem.parentNode)) { return; }
+          this.itemMakeContainer(parentElem);
+          if (!parentElem.container.hasAttribute('data-loaded')) { return; }
+
+          const newItemElem = this.addItem(newItemId, parentElem);
+          if (isFinite(index)) {
+            const refElem = parentElem.container.querySelectorAll('li[data-id]')[index];
+            refElem.parentNode.insertBefore(newItemElem, refElem.nextSibling);
+          }
+        });
         break;
       }
 
