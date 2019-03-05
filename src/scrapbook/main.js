@@ -542,6 +542,7 @@ const scrapbookUi = {
         const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
         if (index !== -1 && index > 0) {
+          // update TOC
           try {
             [this.book.toc[parentItemId][index - 1], this.book.toc[parentItemId][index]] =
                 [this.book.toc[parentItemId][index], this.book.toc[parentItemId][index - 1]];
@@ -552,6 +553,7 @@ const scrapbookUi = {
             break;
           }
 
+          // update DOM
           Array.prototype.filter.call(
             document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
             x => x.getAttribute('data-id') === parentItemId
@@ -574,6 +576,7 @@ const scrapbookUi = {
         const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
         if (index !== -1 && index < siblingItems.length - 1) {
+          // update TOC
           try {
             [this.book.toc[parentItemId][index], this.book.toc[parentItemId][index + 1]] =
                 [this.book.toc[parentItemId][index + 1], this.book.toc[parentItemId][index]];
@@ -584,6 +587,7 @@ const scrapbookUi = {
             break;
           }
 
+          // update DOM
           Array.prototype.filter.call(
             document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
             x => x.getAttribute('data-id') === parentItemId
@@ -627,8 +631,12 @@ const scrapbookUi = {
             const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
             if (index !== -1) {
+              // add to TOC
               try {
                 this.book.toc[parentItemId].splice(index, 1);
+                if (!this.book.toc[parentItemId].length) {
+                  delete this.book.toc[parentItemId];
+                }
                 
                 if (!this.book.toc[targetId]) {
                   this.book.toc[targetId] = [];
@@ -641,6 +649,7 @@ const scrapbookUi = {
                 break;
               }
 
+              // update DOM
               Array.prototype.filter.call(
                 document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
                 x => x.getAttribute('data-id') === parentItemId
@@ -677,12 +686,14 @@ const scrapbookUi = {
           const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
           if (index !== -1) {
-            // remove from toc
-            this.book.toc[parentItemId].splice(index, 1);
-            delete this.book.toc[itemId];
-
-            // upload revised toc to server
+            // remove from TOC
             try {
+              this.book.toc[parentItemId].splice(index, 1);
+              if (!this.book.toc[parentItemId].length) {
+                delete this.book.toc[parentItemId];
+              }
+              delete this.book.toc[itemId];
+
               await this.book.saveToc();
             } catch (ex) {
               alert(`Unable to delete toc of '${itemId}': ${ex.message}`);
@@ -728,7 +739,7 @@ const scrapbookUi = {
               }
             }
 
-            // remove from DOM
+            // update DOM
             Array.prototype.filter.call(
               document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
               x => x.getAttribute('data-id') === parentItemId
