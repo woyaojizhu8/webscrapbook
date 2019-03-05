@@ -34,7 +34,8 @@ const scrapbookUi = {
 
   /**
    * @param {HTMLElement} elem - the element to be inserted to the dialog.
-   *     Dispatch a 'dialogClick' event on elem also resolves the Promise.
+   *     - Dispatch a 'dialogClick' event on elem to resolve the Promise.
+   *     - Listen to 'dialogShow' event for elem to handle initialization.
    */
   async showDialog(elem) {
     const mask = document.getElementById('dialog-mask');
@@ -55,6 +56,7 @@ const scrapbookUi = {
       elem.addEventListener('dialogClick', (event) => {
        resolve(event.detail); 
       });
+      elem.dispatchEvent(new Event('dialogShow'));
     });
 
     mask.removeEventListener('click', onClick);
@@ -619,6 +621,10 @@ const scrapbookUi = {
             dialog.addEventListener('submit', (event) => {
               event.preventDefault();
               dialog.dispatchEvent(new CustomEvent('dialogClick', {detail: input.value}));
+            });
+            dialog.addEventListener('dialogShow', (event) => {
+              event.preventDefault();
+              input.focus();
             });
             targetId = await this.showDialog(dialog);
           }
