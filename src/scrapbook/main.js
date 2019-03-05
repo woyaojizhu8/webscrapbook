@@ -536,32 +536,6 @@ const scrapbookUi = {
       }
 
       case 'mkfolder': {
-        let name;
-        {
-          const dialog = document.createElement('form');
-          const label = dialog.appendChild(document.createElement('label'));
-          label.textContent = `Name the folder:`;
-          dialog.appendChild(document.createTextNode(' '));
-          const input = dialog.appendChild(document.createElement('input'));
-          input.type = 'text';
-          input.value = 'New Folder';
-          dialog.appendChild(document.createTextNode(' '));
-          const submit = dialog.appendChild(document.createElement('input'));
-          submit.type = 'submit';
-          submit.value = 'OK';
-          dialog.addEventListener('submit', (event) => {
-            event.preventDefault();
-            dialog.dispatchEvent(new CustomEvent('dialogClick', {detail: input.value}));
-          });
-          dialog.addEventListener('dialogShow', (event) => {
-            event.preventDefault();
-            input.focus();
-          });
-          name = await this.showDialog(dialog);
-        }
-
-        if (!name) { break; }
-
         let parentItemId = 'root';
         let index = Infinity;
         if (item) {
@@ -576,7 +550,7 @@ const scrapbookUi = {
 
         const newItemId = this.itemMakeNewId();
         const newItem = {
-          "title": name,
+          "title": "New Folder",
           "type": "folder",
           "create": newItemId,
         };
