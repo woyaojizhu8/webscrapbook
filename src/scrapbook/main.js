@@ -94,10 +94,10 @@ const scrapbookUi = {
 
       // init book select
       const wrapper = document.getElementById('book');
-      for (const [bookId, book] of Object.entries(server.books)) {
+      for (const book of Object.values(server.books)) {
         const opt = document.createElement('option');
-        opt.value = bookId;
-        opt.textContent = book.name;
+        opt.value = book.id;
+        opt.textContent = book.config.name;
         wrapper.appendChild(opt);
       }
       wrapper.value = bookId;
@@ -787,15 +787,15 @@ const scrapbookUi = {
 document.addEventListener('DOMContentLoaded', async () => {
   scrapbook.loadLanguages(document);
 
-  document.getElementById("book").addEventListener('change', scrapbookUi.onBookChange);
+  document.getElementById("book").addEventListener('change', scrapbookUi.onBookChange.bind(scrapbookUi));
 
-  document.getElementById("btn-refresh").addEventListener('click', scrapbookUi.onRefresh);
+  document.getElementById("btn-refresh").addEventListener('click', scrapbookUi.onRefresh.bind(scrapbookUi));
 
   document.getElementById("command").addEventListener('focus', scrapbookUi.onCommandFocus.bind(scrapbookUi));
 
   document.getElementById("command").addEventListener('change', scrapbookUi.onCommandChange.bind(scrapbookUi));
 
-  document.getElementById('item-root').addEventListener('click', scrapbookUi.onItemClick);
+  document.getElementById('item-root').addEventListener('click', scrapbookUi.onItemClick.bind(scrapbookUi));
 
   await scrapbookUi.init();
 });
