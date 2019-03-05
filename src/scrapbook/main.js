@@ -34,7 +34,7 @@ const scrapbookUi = {
 
   /**
    * @param {HTMLElement} elem - the element to be inserted to the dialog.
-   *     - Dispatch a 'dialogClick' event on elem to resolve the Promise.
+   *     - Dispatch 'dialogClick' event on elem to resolve the Promise with value.
    *     - Listen to 'dialogShow' event for elem to handle initialization.
    */
   async showDialog(elem) {
