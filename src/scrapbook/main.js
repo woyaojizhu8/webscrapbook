@@ -542,7 +542,7 @@ const scrapbookUi = {
             document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
             x => x.getAttribute('data-id') === parentItemId
           ).forEach((parentElem) => {
-            if (!(parentElem.container && parentElem.container.hasChildNodes())) { return; }
+            if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasChildNodes())) { return; }
             const itemElem = parentElem.container.querySelectorAll('li')[index];
             itemElem.parentNode.insertBefore(itemElem, itemElem.previousSibling);
           });
@@ -574,7 +574,7 @@ const scrapbookUi = {
             document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
             x => x.getAttribute('data-id') === parentItemId
           ).forEach((parentElem) => {
-            if (!(parentElem.container && parentElem.container.hasChildNodes())) { return; }
+            if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasChildNodes())) { return; }
             const itemElem = parentElem.container.querySelectorAll('li')[index];
             itemElem.parentNode.insertBefore(itemElem, itemElem.nextSibling.nextSibling);
           });
@@ -631,7 +631,7 @@ const scrapbookUi = {
                 document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
                 x => x.getAttribute('data-id') === parentItemId
               ).forEach((parentElem) => {
-                if (!(parentElem.container && parentElem.container.hasChildNodes())) { return; }
+                if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasChildNodes())) { return; }
                 const itemElem = parentElem.container.querySelectorAll('li')[index];
                 itemElem.remove();
               });
@@ -640,6 +640,7 @@ const scrapbookUi = {
                 document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
                 x => x.getAttribute('data-id') === targetId
               ).forEach((parentElem) => {
+                if (!(parentElem.parentNode)) { return; }
                 this.itemMakeContainer(parentElem);
                 if (!parentElem.container.hasChildNodes()) { return; }
                 this.addItem(itemId, parentElem);
@@ -710,7 +711,7 @@ const scrapbookUi = {
               document.getElementById('item-wrapper').querySelectorAll('li[data-id], #item-root'),
               x => x.getAttribute('data-id') === parentItemId
             ).forEach((parentElem) => {
-              if (!(parentElem.container && parentElem.container.hasChildNodes())) { return; }
+              if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasChildNodes())) { return; }
               const itemElem = parentElem.container.querySelectorAll('li')[index];
               itemElem.remove();
             });
