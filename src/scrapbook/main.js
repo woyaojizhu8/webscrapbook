@@ -544,7 +544,7 @@ const scrapbookUi = {
 
           const parentItemElem = itemElem.parentNode.parentNode;
           parentItemId = parentItemElem.getAttribute('data-id');
-          const siblingItems = parentItemElem.container.querySelectorAll('li');
+          const siblingItems = parentItemElem.container.children;
           index = Array.prototype.indexOf.call(siblingItems, itemElem);
         }
 
@@ -604,7 +604,7 @@ const scrapbookUi = {
 
           const parentItemElem = itemElem.parentNode.parentNode;
           parentItemId = parentItemElem.getAttribute('data-id');
-          const siblingItems = parentItemElem.container.querySelectorAll('li');
+          const siblingItems = parentItemElem.container.children;
           index = Array.prototype.indexOf.call(siblingItems, itemElem);
         }
 
@@ -671,7 +671,7 @@ const scrapbookUi = {
 
         const parentItemElem = itemElem.parentNode.parentNode;
         const parentItemId = parentItemElem.getAttribute('data-id');
-        const siblingItems = parentItemElem.container.querySelectorAll('li');
+        const siblingItems = parentItemElem.container.children;
         const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
         if (index !== -1 && index > 0) {
@@ -692,7 +692,7 @@ const scrapbookUi = {
             x => x.getAttribute('data-id') === parentItemId
           ).forEach((parentElem) => {
             if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
-            const itemElem = parentElem.container.querySelectorAll('li')[index];
+            const itemElem = parentElem.container.children[index];
             itemElem.parentNode.insertBefore(itemElem, itemElem.previousSibling);
           });
         }
@@ -707,7 +707,7 @@ const scrapbookUi = {
 
         const parentItemElem = itemElem.parentNode.parentNode;
         const parentItemId = parentItemElem.getAttribute('data-id');
-        const siblingItems = parentItemElem.container.querySelectorAll('li');
+        const siblingItems = parentItemElem.container.children;
         const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
         if (index !== -1 && index < siblingItems.length - 1) {
@@ -728,7 +728,7 @@ const scrapbookUi = {
             x => x.getAttribute('data-id') === parentItemId
           ).forEach((parentElem) => {
             if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
-            const itemElem = parentElem.container.querySelectorAll('li')[index];
+            const itemElem = parentElem.container.children[index];
             itemElem.parentNode.insertBefore(itemElem, itemElem.nextSibling.nextSibling);
           });
         }
@@ -767,7 +767,7 @@ const scrapbookUi = {
 
           const parentItemElem = itemElem.parentNode.parentNode;
           const parentItemId = parentItemElem.getAttribute('data-id');
-          const siblingItems = parentItemElem.container.querySelectorAll('li');
+          const siblingItems = parentItemElem.container.children;
           const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
           if (index !== -1) {
@@ -795,7 +795,7 @@ const scrapbookUi = {
               x => x.getAttribute('data-id') === parentItemId
             ).forEach((parentElem) => {
               if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
-              const itemElem = parentElem.container.querySelectorAll('li')[index];
+              const itemElem = parentElem.container.children[index];
               itemElem.remove();
               this.itemReduceContainer(parentElem);
             });
@@ -822,7 +822,7 @@ const scrapbookUi = {
 
         const parentItemElem = itemElem.parentNode.parentNode;
         const parentItemId = parentItemElem.getAttribute('data-id');
-        const siblingItems = parentItemElem.container.querySelectorAll('li');
+        const siblingItems = parentItemElem.container.children;
         const index = Array.prototype.indexOf.call(siblingItems, itemElem);
 
         if (index !== -1) {
@@ -887,7 +887,7 @@ const scrapbookUi = {
             x => x.getAttribute('data-id') === parentItemId
           ).forEach((parentElem) => {
             if (!(parentElem.parentNode && parentElem.container && parentElem.container.hasAttribute('data-loaded'))) { return; }
-            const itemElem = parentElem.container.querySelectorAll('li')[index];
+            const itemElem = parentElem.container.children[index];
             itemElem.remove();
             this.itemReduceContainer(parentElem);
           });
