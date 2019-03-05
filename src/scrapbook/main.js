@@ -818,18 +818,20 @@ const scrapbookUi = {
 
             if (!referred) {
               try {
-                const index = this.book.meta[itemId].index.replace(/\/index.html$/, '');
-                const target = this.book.dataUrl + scrapbook.escapeFilename(index);
+                if (this.book.meta[itemId].index) {
+                  const index = this.book.meta[itemId].index.replace(/\/index.html$/, '');
+                  const target = this.book.dataUrl + scrapbook.escapeFilename(index);
 
-                const formData = new FormData();
-                formData.append('token', await server.acquireToken());
+                  const formData = new FormData();
+                  formData.append('token', await server.acquireToken());
 
-                await server.request({
-                  url: target + '?a=delete&f=json',
-                  responseType: 'json',
-                  method: "POST",
-                  formData: formData,
-                });
+                  await server.request({
+                    url: target + '?a=delete&f=json',
+                    responseType: 'json',
+                    method: "POST",
+                    formData: formData,
+                  });
+                }
               } catch (ex) {
                 alert(`Unable to delete data of '${itemId}': ${ex.message}`);
                 break;
