@@ -402,7 +402,6 @@ const scrapbookUi = {
         cmdElem.querySelector('option[value="move_up"]').hidden = true;
         cmdElem.querySelector('option[value="move_down"]').hidden = true;
         cmdElem.querySelector('option[value="move_into"]').hidden = true;
-        cmdElem.querySelector('option[value="copy"]').hidden = true;
         cmdElem.querySelector('option[value="delete"]').hidden = true;
         break;
       }
@@ -423,7 +422,6 @@ const scrapbookUi = {
         cmdElem.querySelector('option[value="move_up"]').hidden = false;
         cmdElem.querySelector('option[value="move_down"]').hidden = false;
         cmdElem.querySelector('option[value="move_into"]').hidden = false;
-        cmdElem.querySelector('option[value="copy"]').hidden = false;
         cmdElem.querySelector('option[value="delete"]').hidden = false;
         break;
       }
