@@ -141,6 +141,14 @@ const scrapbookUi = {
     }
   },
 
+  itemMakeNewId() {
+    let itemId;
+    do {
+      itemId = scrapbook.dateToId();
+    } while (this.book.meta[itemId]);
+    return itemId;
+  },
+
   itemMakeContainer(elem) {
     if (elem.container) { return; }
 
@@ -395,7 +403,7 @@ const scrapbookUi = {
         cmdElem.querySelector('option[value="browse"]').hidden = true;
         cmdElem.querySelector('option[value="source"]').hidden = true;
         cmdElem.querySelector('option[value="meta"]').hidden = true;
-        cmdElem.querySelector('option[value="mkdir"]').hidden = false;
+        cmdElem.querySelector('option[value="mkfolder"]').hidden = false;
         cmdElem.querySelector('option[value="mksep"]').hidden = false;
         cmdElem.querySelector('option[value="mknote"]').hidden = false;
         cmdElem.querySelector('option[value="editx"]').hidden = true;
@@ -415,7 +423,7 @@ const scrapbookUi = {
         cmdElem.querySelector('option[value="browse"]').hidden = !(isLocalAccess);
         cmdElem.querySelector('option[value="source"]').hidden = !(item.source);
         cmdElem.querySelector('option[value="meta"]').hidden = false;
-        cmdElem.querySelector('option[value="mkdir"]').hidden = true;
+        cmdElem.querySelector('option[value="mkfolder"]').hidden = true;
         cmdElem.querySelector('option[value="mksep"]').hidden = true;
         cmdElem.querySelector('option[value="mknote"]').hidden = true;
         cmdElem.querySelector('option[value="editx"]').hidden = !(isHtml);
@@ -523,6 +531,73 @@ const scrapbookUi = {
             td.textContent = value;
           }
           await this.showDialog(dialog);
+        }
+        break;
+      }
+
+      case 'mkfolder': {
+        let name;
+        {
+          const dialog = document.createElement('form');
+          const label = dialog.appendChild(document.createElement('label'));
+          label.textContent = `Name the folder:`;
+          dialog.appendChild(document.createTextNode(' '));
+          const input = dialog.appendChild(document.createElement('input'));
+          input.type = 'text';
+          input.value = 'New Folder';
+          dialog.appendChild(document.createTextNode(' '));
+          const submit = dialog.appendChild(document.createElement('input'));
+          submit.type = 'submit';
+          submit.value = 'OK';
+          dialog.addEventListener('submit', (event) => {
+            event.preventDefault();
+            dialog.dispatchEvent(new CustomEvent('dialogClick', {detail: input.value}));
+          });
+          dialog.addEventListener('dialogShow', (event) => {
+            event.preventDefault();
+            input.focus();
+          });
+          name = await this.showDialog(dialog);
+        }
+
+        if (name) {
+          const itemId = this.itemMakeNewId();
+          const item = {
+            "title": name,
+            "type": "folder",
+            "create": itemId,
+          };
+
+          // add to meta
+          try {
+            this.book.meta[itemId] = item;
+
+            await this.book.saveMeta();
+          } catch (ex) {
+            alert(`Unable to save meta: ${ex.message}`);
+            break;
+          }
+
+          // add to TOC
+          try {
+            this.book.toc['root'].push(itemId);
+
+            await this.book.saveToc();
+          } catch (ex) {
+            alert(`Unable to save TOC: ${ex.message}`);
+            break;
+          }
+
+          // update DOM
+          Array.prototype.filter.call(
+            document.getElementById('items').querySelectorAll('li[data-id], #item-root'),
+            x => x.getAttribute('data-id') === 'root'
+          ).forEach((parentElem) => {
+            if (!(parentElem.parentNode)) { return; }
+            this.itemMakeContainer(parentElem);
+            if (!parentElem.container.hasAttribute('data-loaded')) { return; }
+            this.addItem(itemId, parentElem);
+          });
         }
         break;
       }
