@@ -411,9 +411,9 @@ const scrapbookUi = {
         const item = this.book.meta[selectedItemElems[0].getAttribute('data-id')];
         const isHtml = /\.(?:html?|xht(?:ml)?)$/.test(item.index);
         cmdElem.querySelector('option[value="index"]').hidden = true;
-        cmdElem.querySelector('option[value="exec"]').hidden = !(isLocalAccess);
+        cmdElem.querySelector('option[value="exec"]').hidden = !(isLocalAccess && item.type === 'file');
         cmdElem.querySelector('option[value="browse"]').hidden = !(isLocalAccess);
-        cmdElem.querySelector('option[value="source"]').hidden = false;
+        cmdElem.querySelector('option[value="source"]').hidden = !(item.source);
         cmdElem.querySelector('option[value="meta"]').hidden = false;
         cmdElem.querySelector('option[value="mkdir"]').hidden = true;
         cmdElem.querySelector('option[value="mksep"]').hidden = true;
